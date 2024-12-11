@@ -1,5 +1,5 @@
-import java.util.*;
 import java.io.*;
+import java.util.*;
 
 public class Main {
     // N: 500 많으면 relation에만 25만개 -> 시간복잡도 O(N) or O(NlogN)
@@ -10,53 +10,49 @@ public class Main {
 
     public static void main(String[] args) throws IOException {
         BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
-        LinkedList<Integer> Q = new LinkedList<>();
+        Queue<Integer> Q = new LinkedList<>();
 
         int N = Integer.parseInt(br.readLine());
-
         int[] buildTime = new int[N + 1];
-        List<List<Integer>> pre = new ArrayList<>();
+        // 이렇게 되어있을경우 0으로 초기화 된다.
         int[] indeg = new int[N + 1];
+        List<List<Integer>> adj = new ArrayList<>();
         int[] ans = new int[N + 1];
 
-        for (int i = 0; i < N + 1; i++) {
-            pre.add(new ArrayList<>());
-            buildTime[i] = 0;
-            indeg[i] = 0;
-            ans[i] = 0;
+        for (int i = 0 ; i<= N; i++) {
+            adj.add(new ArrayList<>());
         }
 
-        for (int i = 1; i < N + 1; i++) {
+        for (int i = 1 ; i <= N; i++) {
             StringTokenizer st = new StringTokenizer(br.readLine());
             buildTime[i] = Integer.parseInt(st.nextToken());
             while (st.hasMoreTokens()) {
                 int cur = Integer.parseInt(st.nextToken());
-                if (cur == -1) {
-                    break;
-                }
+                if (cur == -1) break;
                 indeg[i]++;
-                pre.get(cur).add(i);
+                adj.get(cur).add(i);
             }
         }
+
         for (int i = 1 ; i <= N ; i++) {
             if (indeg[i] == 0) {
-                Q.addLast(i);
+                Q.offer(i);
                 ans[i] += buildTime[i];
             }
         }
 
         while (!Q.isEmpty()) {
-            int cur = Q.removeFirst();
-            for (int next : pre.get(cur)) {
-                indeg[next]--;
-                ans[next] = Math.max(ans[next], ans[cur] + buildTime[next]);
-                if (indeg[next] == 0) {
-                    Q.addLast(next);
+            int cur = Q.poll();
+            for (int i : adj.get(cur)) {
+                indeg[i]--;
+                ans[i] = Math.max(ans[i], ans[cur] + buildTime[i]);
+                if (indeg[i] == 0) {
+                    Q.offer(i);
                 }
             }
         }
 
-        for (int i = 1; i <= N; i++) {
+        for (int i = 1 ; i <= N ; i++) {
             System.out.println(ans[i]);
         }
     }

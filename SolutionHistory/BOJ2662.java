@@ -2,7 +2,7 @@ import java.io.*;
 import java.util.*;
 
 public class Main {
-// N=300, M=20, 아마 시간복잡도 O(N^2 * M)일것?
+    // N=300, M=20, 아마 시간복잡도 O(N^2 * M)일것?
     public static void main(String[] args) throws IOException {
         BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
         StringTokenizer st;

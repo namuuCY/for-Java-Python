@@ -47,6 +47,7 @@ public class Main {
                             sidx = i;
                         }
                     }
+                    // 분기처리를 똑바로 합시다.
                 } else {
                     count.put(sub, new Word(current, i));
                 }

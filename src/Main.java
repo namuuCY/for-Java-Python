@@ -2,103 +2,140 @@ import java.io.*;
 import java.util.*;
 
 public class Main {
+    static final int INF = Integer.MAX_VALUE;
+    static int V, E;
 
-    private static int N, K, color[][], horse[][];
-    private static LinkedList<Integer>[][] map;
-    private static int[] dx = {0, 1, 0, -1}, dy = {1, 0, -1, 0};
+    static List<Node>[] graph;
 
-    public static void main(String[] args) throws Exception {
-        BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
-        StringTokenizer st = new StringTokenizer(br.readLine());
+    static int[][] edges;
 
-        N = Integer.parseInt(st.nextToken());
-        K = Integer.parseInt(st.nextToken());
+    static class Node implements Comparable<Node>{
+        int end;
+        int cost;
 
-        color = new int[N][N];
-        horse = new int[K][3];
-        map = new LinkedList[N][N];
-        for (int i = 0; i < N; i++)
-            for (int j = 0; j < N; j++)
-                map[i][j] = new LinkedList<>();
-
-        for (int i = 0; i < N; i++) {
-            st = new StringTokenizer(br.readLine());
-            for (int j = 0; j < N; j++)
-                color[i][j] = Integer.parseInt(st.nextToken());
+        Node(int e, int c) {
+            end = e;
+            cost = c;
         }
-
-        int x, y, d;
-        for (int i = 0; i < K; i++) {
-            st = new StringTokenizer(br.readLine());
-            x = Integer.parseInt(st.nextToken()) - 1;
-            y = Integer.parseInt(st.nextToken()) - 1;
-            d = Integer.parseInt(st.nextToken());
-
-            if (d == 1) d = 0;
-            else if (d == 4) d = 1;
-
-            horse[i][0] = x;
-            horse[i][1] = y;
-            horse[i][2] = d;
-
-            map[x][y].add(i);
+        public int compareTo(Node n) {
+            return this.cost - n.cost;
         }
-        game();
     }
 
-    private static void game() {
-        for (int t = 1; t <= 1000; t++) {
-            for (int k = 0; k < K; k++) {
-                int x = horse[k][0];
-                int y = horse[k][1];
-                int d = horse[k][2];
-                int num = searchOrder(k, x, y);
+    static int[] dijkstra(int start) {
+        int[] dist = new int[V+1];
+        Arrays.fill(dist, INF);
+        dist[start] = 0;
 
-                int nx = x + dx[d];
-                int ny = y + dy[d];
+        PriorityQueue<Node> pq = new PriorityQueue<>();
+        pq.offer(new Node(start, 0));
 
-                if (nx < 0 || nx >= N || ny < 0 || ny >= N || color[nx][ny] == 2) {
-                    horse[k][2] = d = (d + 2) % 4;
-                    nx = x + dx[d];
-                    ny = y + dy[d];
+        while(!pq.isEmpty()){
+            Node cur = pq.poll();
+            int cNode = cur.end;
+            int cCost = cur.cost;
+            if(cCost > dist[cNode]) continue;
 
-                    if (nx < 0 || nx >= N || ny < 0 || ny >= N || color[nx][ny] == 2)
-                        continue;
-                }
-
-                if (move(x, y, nx, ny, num, color[nx][ny])) {
-                    System.out.println(t);
-                    return;
+            for(Node nxt : graph[cNode]){
+                int nNode = nxt.end;
+                int nCost = cCost + nxt.cost;
+                if(dist[nNode] > nCost){
+                    dist[nNode] = nCost;
+                    pq.offer(new Node(nNode, nCost));
                 }
             }
         }
-        System.out.println("-1");
+        return dist;
     }
 
-    private static boolean move(int x, int y, int nx, int ny, int num, int order) {
-        while (map[x][y].size() > num) {
-            int temp = -1;
-            if (order == 0)
-                temp = map[x][y].remove(num);
-            else
-                temp = map[x][y].removeLast();
+    // 특정 간선 하나만 막고 다익스트라를 다시 돌려서
+    // 1 -> V까지의 최단거리 반환. (도달 불가능이면 INF)
+    static int blockedDijkstra(int blockU, int blockV, int standard) {
+        int[] dist = new int[V+1];
+        Arrays.fill(dist, INF);
+        dist[1] = 0;
 
-            horse[temp][0] = nx;
-            horse[temp][1] = ny;
-            map[nx][ny].add(temp);
+        PriorityQueue<Node> pq = new PriorityQueue<>();
+        pq.offer(new Node(1, 0));
+
+        while(!pq.isEmpty()){
+            Node cur = pq.poll();
+            int cNode = cur.end;
+            int cCost = cur.cost;
+            if(cCost > dist[cNode]) continue;
+
+            for(Node nxt : graph[cNode]){
+                int nNode = nxt.end;
+                int nCost = cCost + nxt.cost;
+                // 만약 (cNode->nNode)가 차단된 간선이면 skip
+                if((cNode == blockU && nNode == blockV) ||
+                        (cNode == blockV && nNode == blockU)) {
+                    continue;
+                }
+                if(dist[nNode] > nCost){
+                    dist[nNode] = nCost;
+                    pq.offer(new Node(nNode, nCost));
+                }
+            }
+        }
+        return dist[V];
+    }
+
+    public static void main(String[] args) throws Exception {
+        // 입력 처리
+        BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
+        StringTokenizer st = new StringTokenizer(br.readLine());
+        V = Integer.parseInt(st.nextToken());
+        E = Integer.parseInt(st.nextToken());
+
+        graph = new ArrayList[V+1];
+        edges = new int[E][3];
+
+        for(int i=0; i<=V; i++){
+            graph[i] = new ArrayList<>();
         }
 
-        if (map[nx][ny].size() >= 4)
-            return true;
+        for(int i=0; i<E; i++){
+            st = new StringTokenizer(br.readLine());
+            int from = Integer.parseInt(st.nextToken());
+            int to   = Integer.parseInt(st.nextToken());
+            int cost = Integer.parseInt(st.nextToken());
+            graph[from].add(new Node(to, cost));
+            graph[to].add(new Node(from, cost));
+            edges[i] = new int[]{from, to, cost};
+        }
 
-        return false;
-    }
+        int[] dist1 = dijkstra(1);   // 1에서 각 노드까지
+        int[] distN = dijkstra(V);   // V에서 각 노드까지 (역으로 다익스트라)
+        int standard = dist1[V];
 
-    private static int searchOrder(int n, int x, int y) {
-        for (int i = 0; i < map[x][y].size(); i++)
-            if (map[x][y].get(i) == n)
-                return i;
+        //    dist1[u] + cost + distN[v] == dist1[V] 이거나 dist1[v] + cost + distN[u] == dist1[V] 이면 OK
+        List<int[]> criticalEdges = new ArrayList<>();
+        for(int i=0; i<E; i++){
+            int u = edges[i][0];
+            int v = edges[i][1];
+            int c = edges[i][2];
+            if(dist1[u] != INF && distN[v] != INF && dist1[u] + c + distN[v] == standard) {
+                criticalEdges.add(edges[i]);
+            }
+            else if(dist1[v] != INF && distN[u] != INF && dist1[v] + c + distN[u] == standard) {
+                criticalEdges.add(edges[i]);
+            }
+        }
 
-        return -1;
+        int gap = 0;
+        for(int[] edge : criticalEdges){
+            int blockU = edge[0];
+            int blockV = edge[1];
+            int distBlocked = blockedDijkstra(blockU, blockV, standard);
+
+            if(distBlocked == INF){
+                System.out.println(-1);
+                return;
+            }
+            gap = Math.max(gap, distBlocked - standard);
+        }
+
+        System.out.println(gap);
     }
 }

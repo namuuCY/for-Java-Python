@@ -163,14 +163,6 @@ public class Main {
                 }
             }
         }
-
         System.out.println(tag? -1 : ans - 1);
-
-
-
-
-
-
-
     }
 }

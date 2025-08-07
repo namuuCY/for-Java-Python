@@ -85,11 +85,11 @@ public class Main {
         Arrays.sort(
                 gaps,
                 (a, b) -> {
-                   for (int i = 59 ; i >= 0; i--) {
-                       if (a[i] == b[i]) continue;
-                       return a[i] - b[i];
-                   }
-                   return a[0] - b[0];
+                    for (int i = 59 ; i >= 0; i--) {
+                        if (a[i] == b[i]) continue;
+                        return a[i] - b[i];
+                    }
+                    return a[0] - b[0];
                 }
         );
 

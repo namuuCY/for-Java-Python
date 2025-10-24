@@ -17,9 +17,7 @@ public class Main {
 
     // 그러면 투포인터 맞네
 
-    // 소수 전부 나열 400만 이하까지
-    // 절반으로 나누면 200만개 => 200만개 중 소수가 몇개인지 확인
-    // N일때 루프 root N/lnN
+
     // 200만 * 1400 ?
     // [  ] 주어진 숫자보다 작으면 뒷칸 늘리기, 주어진 숫자보다 크면 앞칸 줄이기
     // 이 방법은 시간 복잡도 O(N)
@@ -32,6 +30,7 @@ public class Main {
     static boolean[] isPrime = new boolean[4000002];
 
 
+    // 아래 로직대로면 1~N까지 소수 개수 세는데 NloglogN 시간 복잡도
     static void initPrimes() {
         Arrays.fill(isPrime, true);
 
@@ -47,6 +46,7 @@ public class Main {
             }
         }
     }
+
 
     // 3일 경우
     // 2

@@ -23,48 +23,47 @@ public class Main {
     static int M;
 
     static int[] origin;
-    static int[][] tree;
+    static Node[] tree;
 
-//    static class Node {
-//        int min;
-//        int max;
-//
-//        Node(int min, int max) {
-//            this.min = min;
-//            this.max = max;
-//        }
-//    }
+    static class Node {
+        int min;
+        int max;
+
+        Node(int min, int max) {
+            this.min = min;
+            this.max = max;
+        }
+    }
 
     // 현재 노드 위치, start index, end index 세개를 인자로 받는다
     static void init(int nodeIdx, int start, int end) {
         if (start == end) {
-            tree[nodeIdx] = new int[]{origin[start], origin[start]};
+            tree[nodeIdx] = new Node(origin[start], origin[start]);
             return;
         }
         init(nodeIdx * 2, start, (start + end) / 2 );
         init(nodeIdx * 2 + 1, ((start + end) / 2) + 1, end );
 
-        int currentMax = Math.max(tree[nodeIdx * 2][1], tree[nodeIdx * 2 + 1][1]);
-        int currentMin = Math.min(tree[nodeIdx * 2][0], tree[nodeIdx * 2 + 1][0]);
+        int currentMax = Math.max(tree[nodeIdx * 2].max, tree[nodeIdx * 2 + 1].max);
+        int currentMin = Math.min(tree[nodeIdx * 2].min, tree[nodeIdx * 2 + 1].min);
 
-        tree[nodeIdx][0] = currentMin;
-        tree[nodeIdx][1] = currentMax;
+        tree[nodeIdx] = new Node(currentMin, currentMax);
     }
 
-    static int[] query(int nodeIdx, int start, int end, int left, int right) {
+    static Node query(int nodeIdx, int start, int end, int left, int right) {
         if (left > end || start > right) {
-            return new int[]{Integer.MAX_VALUE, Integer.MIN_VALUE};
+            return new Node(Integer.MAX_VALUE, Integer.MIN_VALUE);
         }
         if (left <= start && right >= end) {
             return tree[nodeIdx];
         }
-        int[] leftNode = query(nodeIdx * 2, start, (start + end) / 2, left, right);
-        int[] rightNode = query(nodeIdx * 2 + 1, (start + end) / 2 + 1, end, left, right);
+        Node leftNode = query(nodeIdx * 2, start, (start + end) / 2, left, right);
+        Node rightNode = query(nodeIdx * 2 + 1, (start + end) / 2 + 1, end, left, right);
 
-        int currentMax = Math.max(leftNode[1], rightNode[1]);
-        int currentMin = Math.min(leftNode[0], rightNode[0]);
+        int currentMax = Math.max(leftNode.max, rightNode.max);
+        int currentMin = Math.min(leftNode.min, rightNode.min);
 
-        return new int[]{currentMin, currentMax};
+        return new Node(currentMin, currentMax);
     }
 
 
@@ -80,7 +79,7 @@ public class Main {
         int height = (int) Math.ceil( ( Math.log(N) / Math.log(2) ) );
         int size = 1 << (height + 1);
 
-        tree = new int[size][2];
+        tree = new Node[size];
 
         for (int i = 0; i < N ; i++) {
             origin[i] = Integer.parseInt(br.readLine());
@@ -95,10 +94,10 @@ public class Main {
             st = new StringTokenizer(br.readLine());
             int left = Integer.parseInt(st.nextToken()) - 1;
             int right = Integer.parseInt(st.nextToken()) - 1;
-            int[] ans = query(1, 0, N-1, left, right);
-            sb.append(ans[0]);
+            Node ans = query(1, 0, N-1, left, right);
+            sb.append(ans.min);
             sb.append(" ");
-            sb.append(ans[1]);
+            sb.append(ans.max);
             sb.append('\n');
         }
         System.out.println(sb);

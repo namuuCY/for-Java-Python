@@ -27,72 +27,72 @@ public class Main {
     }
 
     static class Line {
-       double[] start;
-       double[] end;
+        double[] start;
+        double[] end;
 
-       Line(double sx, double sy, double ex, double ey) {
-           if (sEq(sx, ex)) {
-               this.start = new double[]{sx, sy};
-               this.end = new double[]{ex, ey};
-           } else {
-               this.start = new double[]{ex, ey};
-               this.end = new double[]{sx, sy};
-           }
-       }
+        Line(double sx, double sy, double ex, double ey) {
+            if (sEq(sx, ex)) {
+                this.start = new double[]{sx, sy};
+                this.end = new double[]{ex, ey};
+            } else {
+                this.start = new double[]{ex, ey};
+                this.end = new double[]{sx, sy};
+            }
+        }
 
-       int isCross(Line l) {
-           // this, l의 범위 비교
-           if (!checkBound(l)) return 0;
+        int isCross(Line l) {
+            // this, l의 범위 비교
+            if (!checkBound(l)) return 0;
 
-           // this, l의 공통 start x 최댓값으로
-           double sx = Math.max(this.start[0], l.start[0]);
-           double ex = Math.min(this.end[0], l.end[0]);
-           // this, l의 공통 end x는 최솟값으로
+            // this, l의 공통 start x 최댓값으로
+            double sx = Math.max(this.start[0], l.start[0]);
+            double ex = Math.min(this.end[0], l.end[0]);
+            // this, l의 공통 end x는 최솟값으로
 
-           double[] thisSP = calculateInnerPoint(sx);
-           double[] thisEP = calculateInnerPoint(ex);
-           double[] lSP = l.calculateInnerPoint(sx);
-           double[] lEP = l.calculateInnerPoint(ex);
+            double[] thisSP = calculateInnerPoint(sx);
+            double[] thisEP = calculateInnerPoint(ex);
+            double[] lSP = l.calculateInnerPoint(sx);
+            double[] lEP = l.calculateInnerPoint(ex);
 
-           // 공통 start x에서의 두개의 y 좌표 뺀 값과 공통 end x에서의 두개의 y좌표 뺀 값 곱해서 음수거나 0 나오면 1 아니면 0
-           double d1 = thisSP[1] - lSP[1];
+            // 공통 start x에서의 두개의 y 좌표 뺀 값과 공통 end x에서의 두개의 y좌표 뺀 값 곱해서 음수거나 0 나오면 1 아니면 0
+            double d1 = thisSP[1] - lSP[1];
 // 공통 end x에서의 y 차이 (d2)
-           double d2 = thisEP[1] - lEP[1];
+            double d2 = thisEP[1] - lEP[1];
 
 // 곱셈 없이 부호 판별: (d1 <= 0 AND d2 >= 0) OR (d1 >= 0 AND d2 <= 0)
 // sEq(a, b)는 a <= b 를 의미함
-           boolean case1 = sEq(d1, 0) && sEq(0, d2); // d1은 음수(이하), d2는 양수(이상)
-           boolean case2 = sEq(0, d1) && sEq(d2, 0); // d1은 양수(이상), d2는 음수(이하)
+            boolean case1 = sEq(d1, 0) && sEq(0, d2); // d1은 음수(이하), d2는 양수(이상)
+            boolean case2 = sEq(0, d1) && sEq(d2, 0); // d1은 양수(이상), d2는 음수(이하)
 
-           if (case1 || case2) {
-               return 1;
-           }
+            if (case1 || case2) {
+                return 1;
+            }
 
-           return 0;
-       }
-
-
-       double[] calculateInnerPoint(double x) {
-           double tangent = (start[1] - end[1]) / (start[0] - end[0]);
-           double diff = tangent * (x - start[0]);
-
-           return new double[]{x, start[1] + diff};
-       }
+            return 0;
+        }
 
 
+        double[] calculateInnerPoint(double x) {
+            double tangent = (start[1] - end[1]) / (start[0] - end[0]);
+            double diff = tangent * (x - start[0]);
 
-       boolean checkBound(Line l) {
+            return new double[]{x, start[1] + diff};
+        }
+
+
+
+        boolean checkBound(Line l) {
 
 //           System.out.println(this.end[0] < l.start[0]);
 //           System.out.println(l.end[0] < this.start[0]);
-           if (this.end[0] < l.start[0] || l.end[0] < this.start[0]) return false;
-           return true;
-       }
+            if (this.end[0] < l.start[0] || l.end[0] < this.start[0]) return false;
+            return true;
+        }
 
-       boolean checkBound(double x) {
-           return (sEq(this.start[0], x))
-                   && (sEq(x, this.end[0]));
-       }
+        boolean checkBound(double x) {
+            return (sEq(this.start[0], x))
+                    && (sEq(x, this.end[0]));
+        }
     }
 
 

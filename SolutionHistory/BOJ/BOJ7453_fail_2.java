@@ -22,40 +22,39 @@ public class Main {
     static int[] D;
 
     static int N;
-    static int size;
 
-    static int lower(int[] list, int target) {
+
+    static int biSearch(List<Integer> list, int target) {
         int start = 0;
-        int end = size;
+        int end = list.size() - 1;
+        int ans = 0;
 
-        while (start < end) {
+        while (start <= end) {
             int mid = (start + end) / 2;
-            if (list[mid] >= target) {
-                end = mid;
-            } else {
+
+            if (list.get(mid) > target) {
+                end = mid - 1;
+            } else if (list.get(mid) < target) {
                 start = mid + 1;
+            } else {
+                // 중복된 갯수 찾기
+                ans += 1;
+                int temp = mid;
+
+                while (--temp >= 0 && list.get(temp) == target) {
+                    ans ++;
+                }
+
+                int temp2 = mid;
+
+                while (++temp2 < end + 1 && list.get(temp2) == target) {
+                    ans ++;
+                }
+                break;
             }
         }
-
-        return start;
+        return ans;
     }
-
-    static int upper(int[] list, int target) {
-        int start = 0;
-        int end = size;
-
-        while (start < end) {
-            int mid = (start + end) / 2;
-            if (list[mid] > target) {
-                end = mid;
-            } else {
-                start = mid + 1;
-            }
-        }
-        return start;
-    }
-
-
 
     public static void main(String[] args) throws Exception {
         BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
@@ -75,26 +74,23 @@ public class Main {
             D[i] = Integer.parseInt(input[3]);
         }
 
-        int[] sum = new int[N*N];
-        int idx = 0;
-        size = N * N;
+        List<Integer> sum = new ArrayList<>();
 
         for (int i = 0; i < N ; i++) {
             for (int j = 0; j< N ; j++) {
-                sum[idx] = C[i] + D[j];
-                idx ++;
+                sum.add(C[i] + D[j]);
             }
         }
 
-        Arrays.sort(sum);
+        sum.sort(Integer::compareTo);
 
-        long ans = 0;
+        int ans = 0;
 
         for (int i = 0; i < N ; i++) {
             for (int j = 0; j< N ; j++) {
-                int target = (-1) * (A[i] + B[j]);
+                int currentSum = A[i] + B[j];
                 // 이분탐색으로 몇개인지 확인
-                ans += upper(sum, target) - lower(sum, target);
+                ans += biSearch(sum, (-1) * currentSum);
             }
         }
 

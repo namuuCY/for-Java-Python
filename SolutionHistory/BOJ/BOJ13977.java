@@ -34,7 +34,7 @@ public class Main {
     static long[] factorialInverses;
 
     static long PRIME = 1_000_000_007;
-    
+
     static void init() {
 
         // 팩토리얼 계산 / DP에 저장
@@ -52,13 +52,13 @@ public class Main {
         for (int i = 3_999_999 ; i > 0 ; i--) {
             factorialInverses[i] = factorialInverses[i + 1] * (i + 1) % PRIME;
         }
-        
+
     }
-    
+
     static long pow(long n, long p) {
         if (p == 0) return 1;
         if (p == 1) return n % PRIME;
-        
+
         long temp = pow(n, p / 2);
 
         if (p % 2 == 1) {
@@ -94,7 +94,7 @@ public class Main {
             // 이항계수 계산
             sb.append(ans).append("\n");
         }
-        
+
         bw.write(sb.toString());
         bw.flush();
     }

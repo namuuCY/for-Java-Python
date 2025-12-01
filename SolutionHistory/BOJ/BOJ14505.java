@@ -4,8 +4,8 @@ import java.util.*;
 
 public class Main {
 
-    // Source(https://www.acmicpc.net/problem/14517)
-    // 14517 팰린드롬 개수 구하기
+    // Source(https://www.acmicpc.net/problem/14505)
+    // 14505 팰린드롬 개수 구하기
     // 점화식 구하는게 너무 빡셌다
 
     static long P = 10_007;
@@ -40,14 +40,13 @@ public class Main {
             }
             for (int i = 0 ; i < N - gap ; i ++) {
                 if (origin[i] == origin[i + gap]) {
-                    dp[i][i+gap] = ((dp[i + 1][i + gap] + dp[i][i + gap - 1]) % P + 1) % P;
+                    dp[i][i+gap] = ((dp[i + 1][i + gap] + dp[i][i + gap - 1]) + 1);
                 } else {
                     dp[i][i+gap] =
                             (
-                                    ((dp[i + 1][i + gap] + dp[i][i + gap - 1]) % P)
-                                            + P
-                                            - (dp[i + 1][i + gap - 1] % P)
-                            ) % P;
+                                    ((dp[i + 1][i + gap] + dp[i][i + gap - 1]))
+                                            - (dp[i + 1][i + gap - 1])
+                            );
                 }
             }
         }

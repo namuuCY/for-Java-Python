@@ -4,9 +4,8 @@ import java.util.*;
 
 public class Main {
 
-    // Source(https://www.acmicpc.net/problem/14517)
-    // 14517 팰린드롬 개수 구하기
-    // 점화식 구하는게 너무 빡셌다
+    // Source(https://www.acmicpc.net/problem/14505)
+    // 14517 팰린드롬 개수 구하기 small
 
     static long P = 10_007;
     static int N;

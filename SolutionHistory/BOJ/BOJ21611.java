@@ -7,7 +7,7 @@ public class Main {
     // 21611 마법사 상어와 블리자드
 
     static int N;
-//    static int[][] board;
+    //    static int[][] board;
     static int[] snake;
     static int popCount = 0;
 
@@ -170,7 +170,7 @@ public class Main {
         // pop?
         // 11 22 33 44 ...
         //
-         // N 이면 마지막은 N - 1
+        // N 이면 마지막은 N - 1
         // 1 1 2 2 3 3 4 4 5 5 6 6
         Queue<Integer> Q = new LinkedList<>();
 

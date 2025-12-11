@@ -3,10 +3,6 @@ import java.util.*;
 
 public class Main {
 
-
-//    https://www.acmicpc.net/problem/17825
-    // 17825 주사위 윷놀이
-
     static int[] dice = new int[10];
     static Node[] map = new Node[33];
     static int maxAns;

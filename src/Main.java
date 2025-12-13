@@ -2,407 +2,144 @@ import java.io.*;
 import java.util.*;
 
 public class Main {
+    // https://www.acmicpc.net/problem/18809
+    // 18809 Gaaaaaaaaaarden
 
 
-//    https://www.acmicpc.net/problem/19235
-    // 19235 모노미노도미노
-
-    static int[][] green = new int[6][4];
-    static int[][] blue = new int[4][6];
+    static int[] dx = new int[]{1, 0, -1, 0};
+    static int[] dy = new int[]{0, 1, 0, -1};
+    static List<int[]> available = new ArrayList<>();
+    static int zoneNumber;
+    static int[][] board;
+    static int N;
+    static int M;
+    static int G;
+    static int R;
     static int ans = 0;
-    static int count1 = 1;
-    static int count2 = 100001;
-    static int count3 = 200001;
-
-    static void debug(int type, int r, int c) {
 
 
+    // R + G 10개 이하
+    // R, G 도 5개씩 이하
+    // => 10! / 5! * 5! = 10 9 2 7  / -> 1260 가지 케이스 * 최대 2500 BFS -> 조금 빡빡한가?
+    // 전부 다 위치를 지정한 후 BFS
+    // 만약 해당 위치에 같은 점수이면 큐에 넣지 않는 거로 -> 이거로 되나?
+
+
+    static void backtracking(int count, int gCount, int rCount, int[] marked) {
+        if (count == R+G) {
+            int currentAns = bfs(marked, false);
+            if (ans < currentAns) {
+                ans = currentAns;
+                bfs(marked, true);
+                System.out.println("이떄야" + Arrays.toString(marked));
+            }
+            return;
+        }
+
+        int[] temp = marked.clone();
+        for (int i = 0; i < zoneNumber; i++) {
+            if (temp[i] != 0) continue;
+            if (gCount == G) {
+                //2-> r추가
+                temp[i] = 2;
+                backtracking(count + 1, gCount, rCount + 1, temp);
+            } else {
+                // 1-> g 추가
+                temp[i] = 1;
+                backtracking(count + 1, gCount + 1, rCount, temp);
+            }
+            temp[i] = 0;
+        }
+    }
+
+
+
+    static int bfs(int[] marked, boolean debug) {
+        //
+
+        int ans = 0;
+        Queue<int[]> Q = new LinkedList<>();
+        int[][][] tempBoard = new int[N][M][2];
+        for (int r= 0; r < N ; r++) {
+            for (int c = 0; c < M; c++) {
+                for (int b = 0 ; b < 2; b++) {
+                    tempBoard[r][c][b] = -1;
+                }
+            }
+        }
+        for (int i = 0; i < zoneNumber ; i++) {
+            if (marked[i] != 0) {
+                // 0 -> g
+                // 1 -> r
+                int[] rc = available.get(i);
+                Q.add(new int[]{rc[0], rc[1], marked[i] - 1, 0});
+                tempBoard[rc[0]][rc[1]][marked[i] - 1] = 0;
+            }
+        }
+
+        while (!Q.isEmpty()) {
+            // 어떻게 하면 두 개 다 같은 숫자일때 멈출것인가?
+            int[] info = Q.poll();
+            int r = info[0];
+            int c = info[1];
+            int gr = info[2];
+            int dist = info[3];
+
+            for (int dir = 0; dir < 4; dir++) {
+                int nr = r + dx[dir];
+                int nc = c + dy[dir];
+                if (nr < 0 || nr >= N || nc < 0 || nc >= M) continue;
+                if (board[nr][nc] == 0) continue;
+                if (tempBoard[nr][nc][gr] != -1) continue;
+                tempBoard[nr][nc][gr] = dist + 1;
+                if (tempBoard[nr][nc][gr^1] == dist + 1) {
+                    ans ++;
+                    continue;
+                }
+                Q.add(new int[]{nr, nc, gr, dist + 1});
+            }
+        }
+        if (debug) {
+            debug(tempBoard);
+        }
+        return ans;
+    }
+
+    static void debug(int[][][] temp) {
         StringBuilder sb = new StringBuilder();
-        sb.append("\n");
-        int spr = r+1;
-        int spc = c+1;
-
-        for (int i = 0 ; i < 4 ; i ++) {
-            for (int j = 0; j < 4; j++) {
-                if ((i == r) && (j == c)) {
-                    sb.append(type);
-                    sb.append(" ");
-                    continue;
-                }
-                if (type == 2 && (i == r) && (j == spc)) {
-                    sb.append(type);
-                    sb.append(" ");
-                    continue;
-                }
-                if ((type == 3) && (i == spr) && (j == c)) {
-                    sb.append(type);
-                    sb.append(" ");
-                    continue;
-                }
-                sb.append(0);
-                sb.append(" ");
-            }
-
-            for (int j = 0; j < 6; j++) {
-                sb.append((blue[i][j]== 0)? 0 : blue[i][j]/100000 + 1);
+        for (int i = 0; i < N; i++) {
+            for (int j = 0; j < M; j++) {
+                sb.append(temp[i][j][0]);
+                sb.append("-");
+                sb.append(temp[i][j][1]);
                 sb.append(" ");
             }
             sb.append("\n");
         }
-
-        for (int i = 0 ; i < 6 ; i ++) {
-
-
-            for (int j = 0; j < 4; j++) {
-                sb.append((green[i][j] == 0)? 0 : green[i][j] /100000 +1);
-                sb.append(" ");
-            }
-            sb.append("\n");
-        }
-
-
         System.out.println(sb);
     }
 
-    static void drop(int type, int x, int y) {
-        if (type == 2) {
-            // (x,y) (x,y+1) ->...
-            greenDrop(new int[]{x}, new int[]{y, y+1}, count2);
-            blueDrop(new int[]{x}, new int[]{y, y+1}, count2);
-            count2++;
-        } else if (type == 3) {
-            // (x,y) (x+1, y)
-            greenDrop(new int[]{x, x + 1}, new int[]{y}, count3);
-            blueDrop(new int[]{x, x + 1}, new int[]{y}, count3);
-            count3++;
-        } else {
-            greenDrop(new int[]{x}, new int[]{y}, count1);
-            blueDrop(new int[]{x}, new int[]{y}, count1);
-            count1++;
-        }
-    }
-
-    static void greenDrop(int[] xl, int[] yl, int number) {
-        int maxDepth = 6;
-        for (int y : yl) {
-            int currentDepth = 2;
-            for (int x = 2; x < 6 ; x++) {
-                if (green[x][y] != 0) {
-                    break;
-                }
-                currentDepth ++;
-            }
-            maxDepth = Math.min(maxDepth, currentDepth);
-        }
-        if (xl.length > 1) {
-                green[maxDepth -2][yl[0]] = number;
-                green[maxDepth -1][yl[0]] = number;
-        } else {
-            for (int y : yl) {
-                green[maxDepth -1][y] = number;
-            }
-        }
-        System.out.println("drop되고 난 후");
-        debug(0,0,0);
-    }
-
-    static void blueDrop(int[] xl, int[] yl, int number) {
-        int maxDepth = 6;
-        for (int x : xl) {
-            int currentDepth = 2;
-            for (int y = 2; y < 6 ; y++) {
-                if (blue[x][y] != 0) {
-                    break;
-                }
-                currentDepth ++;
-            }
-            maxDepth = Math.min(maxDepth, currentDepth);
-        }
-        if (yl.length > 1) {
-            blue[xl[0]][maxDepth - 2] = number;
-            blue[xl[0]][maxDepth - 1] = number;
-        } else {
-            for (int x : xl) {
-                blue[x][maxDepth - 1] = number;
-            }
-        }
-    }
-
-
-    static void eraseEnd(int[] gb) {
-        int cnt = gb[0];
-        if (cnt > 0) {
-            for (int i = 5; i >= cnt; i--) {
-                for (int j = 0; j < 4; j++) {
-                    green[i][j] = green[i - cnt][j];
-                }
-            }
-            // 윗부분 비우기
-            for (int i = 0; i < cnt; i++) {
-                for (int j = 0; j < 4; j++) {
-                    green[i][j] = 0;
-                }
-            }
-        }
-
-        // 2. Blue 처리
-
-        cnt = gb[1];
-        if (cnt > 0) {
-            for (int j = 5; j >= cnt; j--) {
-                for (int i = 0; i < 4; i++) {
-                    blue[i][j] = blue[i][j - cnt];
-                }
-            }
-            for (int j = 0; j < cnt; j++) {
-                for (int i = 0; i < 4; i++) {
-                    blue[i][j] = 0;
-                }
-            }
-        }
-    }
-
-
-//    static void eraseEnd(int[] gb) {
-//        for (int r = 5 ; r > 5-gb[0] ; r--) {
-//            for (int c = 0; c  < 4; c++) {
-//                green[r][c] = 0;
-//            }
-//        }
-//
-//        for (int c = 5 ; c > 5-gb[1] ; c--) {
-//            for (int r = 0; r  < 4; r++) {
-//                blue[r][c] = 0;
-//            }
-//        }
-//    }
-
-    static boolean eraseWithScore() {
-        boolean isMore = false;
-        for (int i = 0; i < 6 ; i++) {
-            for (int j = 0; j < 4; j++) {
-                if (green[i][j] == 0) break;
-                if (j == 3) {
-                    debug(0, 0, 0);
-                    System.out.println("이상태에서 그린에 " + i + " 행 제거됨");
-                    for (int k = 0; k < 4; k++) {
-                        green[i][k] = 0;
-                    }
-                    ans ++;
-                    isMore = true;
-                }
-            }
-        }
-
-        for (int c = 0; c < 6 ; c++) {
-            for (int r = 0; r < 4; r++) {
-                if (blue[r][c] == 0) break;
-                if (r == 3) {
-                    for (int k = 0; k < 4; k++) {
-                        blue[k][c] = 0;
-                    }
-                    System.out.println("블루에 " + c + " 열 제거됨");
-                    ans ++;
-                    isMore = true;
-                }
-            }
-        }
-
-        return isMore;
-    }
-
-    static void press() {
-        // 각각 r, c 맨 오른쪽부터
-        for (int r = 4; r >= 0 ; r--) {
-            for (int c = 0; c < 4; c++) {
-                if (green[r][c] == 0) continue;
-                int temp = green[r][c];
-                if (green[r][c] / 100000 == 1) {
-                    // type 2
-                    // // (x,y) (x,y+1)
-                    if ((c + 1 < 4) && green[r][c + 1] == green[r][c]) {
-                        green[r][c] = 0;
-                        green[r][c+1] = 0;
-                        int gap = 10;
-                        for (int i = 0; i < 2; i++) {
-                            int dist = 0;
-                            while (((r+dist+1) <= 5) && green[r + dist + 1][c+i] == 0) {
-                                dist++;
-                            }
-                            gap = Math.min(gap, dist);
-                        }
-                        green[r + gap][c] = temp;
-                        green[r + gap][c+1] = temp;
-                        continue;
-                    }
-
-                    green[r][c] = 0;
-                    int dist = 0;
-                    while (((r+dist+1) <= 5) && green[r + dist + 1][c] == 0) {
-                        dist++;
-                    }
-                    green[r+dist][c] = temp;
-
-                } else if (green[r][c] / 100000 == 2) {
-                    // 2개 챙겨야 할 때
-
-                    if ((r - 1 >= 0) && green[r-1][c] == green[r][c]) {
-                        green[r][c] = 0;
-                        green[r-1][c] = 0;
-                        int dist = 0;
-                        while (((r+dist+1) <= 5) && green[r + dist + 1][c] == 0) {
-                            dist++;
-                        }
-                        green[r + dist][c] = temp;
-                        green[r + dist -1][c] = temp;
-                        continue;
-                    }
-
-                    green[r][c] = 0;
-                    int dist = 0;
-                    while (((r+dist+1) <= 5) && green[r + dist + 1][c] == 0) {
-                        dist++;
-                    }
-                    green[r+dist][c] = temp;
-                    // 1개만
-                } else {
-                    green[r][c] = 0;
-                    int dist = 0;
-                    while (((r+dist+1) <= 5) && green[r + dist + 1][c] == 0) {
-                        dist++;
-                    }
-                    green[r+dist][c] = temp;
-                }
-            }
-        }
-
-        for (int c = 4; c >= 0 ; c--) {
-            for (int r = 0; r < 4; r++) {
-                if (blue[r][c] == 0) continue;
-                int temp = blue[r][c];
-                if (blue[r][c] / 100000 == 2) {
-                    // type 3
-                    // // (x,y) (x,y+1)
-
-                    if ((r + 1 < 4) && blue[r + 1][c] == blue[r][c]) {
-                        blue[r][c] = 0;
-                        blue[r+1][c] = 0;
-                        int gap = 10;
-                        for (int i = 0; i < 2; i++) {
-                            int dist = 0;
-                            while (((c + dist + 1) <= 5) && blue[r +i][c + dist + 1] == 0) {
-                                dist++;
-                            }
-                            gap = Math.min(gap, dist);
-                        }
-                        blue[r][c + gap] = temp;
-                        blue[r+1][c+ gap] = temp;
-                        continue;
-                    }
-
-                    blue[r][c] = 0;
-                    int dist = 0;
-                    while (((c+dist+1) <= 5) && blue[r][c+dist+1] == 0) {
-                        dist++;
-                    }
-                    blue[r][c+dist] = temp;
-
-                } else if (blue[r][c] / 100000 == 1) {
-                    // 2개 챙겨야 할 때
-
-                    if ((c - 1 >= 0) && blue[r][c - 1] == blue[r][c]) {
-                        blue[r][c] = 0;
-                        blue[r][c-1] = 0;
-                        int dist = 0;
-                        while (((c+dist+1) <= 5) && blue[r ][c+ dist + 1] == 0) {
-                            dist++;
-                        }
-                        blue[r][c + dist] = temp;
-                        blue[r][c + dist -1] = temp;
-                        continue;
-                    }
-
-                    blue[r][c] = 0;
-                    int dist = 0;
-                    while (((c+dist+1) <= 5) && blue[r][c + dist + 1] == 0) {
-                        dist++;
-                    }
-                    blue[r][c+dist] = temp;
-                    // 1개만
-                } else {
-                    blue[r][c] = 0;
-                    int dist = 0;
-                    while (((c+dist+1) <= 5) && blue[r][c + dist + 1] == 0) {
-                        dist++;
-                    }
-                    blue[r][c+dist] = temp;
-                }
-            }
-        }
-        System.out.println("press되고 난 후");
-    }
-
-    // 제거해야할 줄 수 알려줌
-    // int[] = {green, blue}
-    static int[] checkShell() {
-        int[] gb = new int[2];
-
-        for (int r = 0 ; r < 2 ; r++) {
-            for (int c = 0; c < 4 ; c++) {
-                if (green[r][c] == 0) continue;
-                gb[0]++;
-                break;
-            }
-        }
-
-        for (int c = 0 ; c < 2 ; c++) {
-            for (int r = 0; r < 4 ; r++) {
-                if (blue[r][c] == 0) continue;
-                gb[1]++;
-//                System.out.println(gb[1]);
-
-                break;
-            }
-        }
-        return gb;
-    }
-
-
-
     public static void main(String[] args) throws Exception {
         BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
-        int N = Integer.parseInt(br.readLine());
+        StringTokenizer st = new StringTokenizer(br.readLine());
+        N = Integer.parseInt(st.nextToken());
+        M = Integer.parseInt(st.nextToken());
+        G = Integer.parseInt(st.nextToken());
+        R = Integer.parseInt(st.nextToken());
+        board = new int[N][M];
 
-        while (N -- > 0) {
-            StringTokenizer st = new StringTokenizer(br.readLine());
-            int type = Integer.parseInt(st.nextToken());
-            int dropR = Integer.parseInt(st.nextToken());
-            int dropC = Integer.parseInt(st.nextToken());
-            drop(type, dropR, dropC);
-
-
-            while (true) {
-                press();
-                if (!eraseWithScore()) break;
+        for (int r = 0 ; r < N; r ++) {
+            st = new StringTokenizer(br.readLine());
+            for (int c = 0; c < M; c++) {
+                board[r][c] = Integer.parseInt(st.nextToken());
+                if (board[r][c] == 2) {
+                    available.add(new int[]{r,c});
+                }
             }
-
-            int[] gb = checkShell();
-            eraseEnd(gb);
-
-            debug(type, dropR, dropC);
         }
+        zoneNumber = available.size();
+        backtracking(0,0,0, new int[zoneNumber]);
 
         System.out.println(ans);
-
-        int block = 0;
-        for (int i = 0; i< 6 ;i++) {
-            for (int j = 0 ; j < 4 ; j++) {
-                block += (green[i][j]!=0) ? 1:0;
-                block += (blue[j][i]!=0) ? 1:0;
-            }
-        }
-        System.out.println(block);
-
-
     }
 }

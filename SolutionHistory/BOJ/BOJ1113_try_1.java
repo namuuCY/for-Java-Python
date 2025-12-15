@@ -12,9 +12,9 @@ public class Main {
     static int[] dy = new int[]{0, 1, 0, -1};
     static int[][] ans;
     static boolean[][] visited;
-//    static Queue<Integer> bfsQ = new ArrayDeque<>();
+    static Queue<Integer> bfsQ = new LinkedList<>();
     static List<Integer> ansQ = new ArrayList<>();
-        static Set<Integer> ansSet = new HashSet<>();
+    //    static Set<Integer> ansSet = new HashSet<>();
 //    static Queue<int[]> bfsQ = new LinkedList<>();
 //    static List<int[]> ansQ = new ArrayList<>();
     static int total = 0;
@@ -86,8 +86,8 @@ public class Main {
 
     static void bfs(boolean[][] visited, int height, int r, int c) {
 //        boolean[][] temp = copy(visited);
-        Queue<Integer> bfsQ = new ArrayDeque<>();
         boolean isPossible = true;
+        bfsQ.clear();
         ansQ.clear();
         bfsQ.add(pointToInt(r,c));
         ansQ.add(pointAnsToInt(r, c, height - board[r][c]));

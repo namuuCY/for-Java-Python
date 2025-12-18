@@ -2,94 +2,89 @@ import java.io.*;
 import java.util.*;
 
 public class Main {
-    // https://www.acmicpc.net/problem/2473
-    // 2473 세 용액
-
+    // https://www.acmicpc.net/problem/11780
+    // 11780 플로이드 2
 
     static int N;
-    static long[] numbers;
-
-
-    static int bisect(int start, int end, long value) {
-        int ts = start + 1;
-        int te = end - 1;
-        // lowerbound;
-        while (ts < te) {
-            int mid = (ts + te) / 2;
-            if (numbers[mid] >= value) {
-                te = mid;
-            } else {
-                ts = mid + 1;
-            }
-        }
-        return ts;
-
-//        int upper;
-//        ts = start;
-//        te = end;
-//        while (ts < te) {
-//            int mid = (ts + te) / 2;
-//            if (numbers[mid] > value) {
-//                te = mid;
-//            } else {
-//                ts = mid + 1;
-//            }
-//        }
-//        upper = ts;
-//
-//        if (lower == start) return upper
-
-
-    }
-
+    static int[][] dist;
+    static int[][] next;
+    static int INF = 0x3f3f3f3f;
 
     public static void main(String[] args) throws Exception {
         BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
+        BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(System.out));
 
         N = Integer.parseInt(br.readLine());
-        numbers = new long[N];
-
-        String[] input = br.readLine().strip().split(" ");
-
-        for (int i = 0; i < N ; i++ ) {
-            numbers[i] = Integer.parseInt(input[i]);
+        dist = new int[N][N];
+        next = new int[N][N];
+        for (int i = 0 ; i < N; i++) {
+            Arrays.fill(dist[i], INF);
+            dist[i][i] = 0;
         }
+        int M = Integer.parseInt(br.readLine());
 
-        Arrays.sort(numbers);
-
-        long minGap = Long.MAX_VALUE;
-        long[] answer = new long[3];
-
-        for (int i = 0 ; i < N - 2; i++) {
-            for (int j = i + 2 ; j < N; j++) {
-                long targetValue = (-1) * (numbers[i] + numbers[j]);
-                int possibleIdx = bisect(i, j, targetValue);
-
-                if (i < possibleIdx) {
-                    long currentGap = Math.abs(numbers[i] + numbers[possibleIdx] + numbers[j]);
-                    if (currentGap < minGap) {
-                        minGap = currentGap;
-                        answer[0] = numbers[i];
-                        answer[1] = numbers[possibleIdx];
-                        answer[2] = numbers[j];
-                    }
-                }
-
-                if (i < possibleIdx - 1) {
-                    long currentGap = Math.abs(numbers[i] + numbers[possibleIdx - 1] + numbers[j]);
-                    if (currentGap < minGap) {
-                        minGap = currentGap;
-                        answer[0] = numbers[i];
-                        answer[1] = numbers[possibleIdx - 1];
-                        answer[2] = numbers[j];
-                    }
-                }
-
+        while (M-- > 0) {
+            StringTokenizer st = new StringTokenizer(br.readLine());
+            int start = Integer.parseInt(st.nextToken()) - 1;
+            int end = Integer.parseInt(st.nextToken()) - 1 ;
+            int currentDist = Integer.parseInt(st.nextToken());
+            if (dist[start][end] > currentDist) {
+                dist[start][end] = currentDist;
+                next[start][end] = end;
             }
         }
 
-        System.out.println(answer[0] + " " + answer[1] + " " + answer[2]);
+        for (int pass = 0 ; pass < N; pass++) {
+            for (int st = 0 ; st < N; st ++) {
+                for (int ed = 0 ; ed < N; ed++) {
+                    if (dist[st][pass] + dist[pass][ed] >= dist[st][ed]) continue;
+                    dist[st][ed] = dist[st][pass] + dist[pass][ed];
+                    next[st][ed] = next[st][pass];
+                }
+            }
+        }
 
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < N; i++) {
+            for (int j = 0 ; j < N; j++) {
+                if (dist[i][j] == INF) {
+                    sb.append(0);
+                } else {
+                    sb.append(dist[i][j]);
+                }
+                sb.append(" ");
+            }
+            sb.append("\n");
+        }
+
+
+        for (int i = 0 ; i < N; i++) {
+            for (int j = 0 ; j < N; j++) {
+                if (dist[i][j] == 0 || dist[i][j] == INF) {
+                    sb.append(0);
+                    sb.append("\n");
+                    continue;
+                }
+                StringBuilder tsb = new StringBuilder();
+                int count = 0;
+                int start = i;
+                while (start != j) {
+                    count ++;
+                    tsb.append(start + 1);
+                    tsb.append(" ");
+                    start = next[start][j];
+                }
+                count ++;
+                tsb.append(start + 1);
+                tsb.append("\n");
+                sb.append(count);
+                sb.append(" ");
+                sb.append(tsb);
+            }
+        }
+
+        bw.write(sb.toString());
+        bw.flush();
     }
 
 }

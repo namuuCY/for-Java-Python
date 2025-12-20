@@ -2,55 +2,64 @@ import java.io.*;
 import java.util.*;
 
 public class Main {
-    // https://www.acmicpc.net/problem/1956
-    // 1956 운동
+    // https://www.acmicpc.net/problem/11562
+    // 11562 백양로 브레이크
 
-    static int V;
-    static int E;
-
+    static int n;
     static int[][] dist;
     static int INF = 0x3f3f3f3f;
 
     public static void main(String[] args) throws Exception {
         BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
-        String[] input = br.readLine().strip().split(" ");
+        BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(System.out));
 
-        V = Integer.parseInt(input[0]);
-        E = Integer.parseInt(input[1]);
+        StringTokenizer st = new StringTokenizer(br.readLine());
+        n = Integer.parseInt(st.nextToken());
+        int m = Integer.parseInt(st.nextToken());
 
-        dist = new int[V + 1][V + 1];
-        for (int i = 1 ; i <= V; i++) {
+        dist = new int[n+1][n+1];
+        for (int i = 1; i <= n; i++) {
             Arrays.fill(dist[i], INF);
             dist[i][i] = 0;
         }
 
-        while (E-- > 0) {
-            StringTokenizer st = new StringTokenizer(br.readLine());
-            int s = Integer.parseInt(st.nextToken());
-            int e = Integer.parseInt(st.nextToken());
-            int d = Integer.parseInt(st.nextToken());
-            dist[s][e] = d;
+        while (m -- > 0) {
+            st = new StringTokenizer(br.readLine());
+            int u = Integer.parseInt(st.nextToken());
+            int v = Integer.parseInt(st.nextToken());
+            int b = Integer.parseInt(st.nextToken());
+
+			dist[u][v] = 0;
+
+			if (b == 1) {
+				dist[v][u] = 0;
+            } else {
+				dist[v][u] = 1;
+            }
         }
 
-        for (int p = 1; p <= V; p++) {
-            for (int s = 1; s <= V; s++) {
-                for (int e = 1; e <= V; e++) {
+        int k = Integer.parseInt(br.readLine());
+
+        for (int p = 1; p <= n ; p++) {
+            for (int s = 1; s <= n; s++) {
+                for (int e = 1; e <= n; e++) {
                     if (dist[s][e] <= dist[s][p] + dist[p][e]) continue;
                     dist[s][e] = dist[s][p] + dist[p][e];
                 }
             }
         }
 
-        int ans = Integer.MAX_VALUE;
-        for (int s = 1; s <= V ; s++) {
-            for (int e = 1; e <= V; e++) {
-                if (s == e) continue;
-                if (dist[s][e] + dist[e][s] >= INF) continue;
-                ans = Math.min(ans, dist[s][e] + dist[e][s]);
-            }
+        StringBuilder sb = new StringBuilder();
+        while (k -- > 0) {
+            st = new StringTokenizer(br.readLine());
+            int s = Integer.parseInt(st.nextToken());
+            int e = Integer.parseInt(st.nextToken());
+            sb.append(dist[s][e]);
+            sb.append("\n");
         }
 
-        System.out.println((ans >= INF) ? -1 : ans);
+        bw.write(sb.toString());
+        bw.flush();
     }
 
 }

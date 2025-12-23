@@ -2,72 +2,32 @@ import java.io.*;
 import java.util.*;
 
 public class Main {
-    // https://www.acmicpc.net/problem/14938
-    // 14938 서강 그라운드
+    // https://www.acmicpc.net/problem/9661
+    // 9661 돌 게임 7
 
-    static int INF = 0x3f3f3f3f;
-    static int N;
-    static int M;
-    static int[][] dist;
-    static int[] items;
-
-
+    // 누군가 한명이 남은돌이 5의 배수가 되도록 만들 수 있다면,
+    // 그 사람이 승리함
+    // 맨처음 존재하는 수에 대해서 5N이 되는지 확인
+    // 만약 못하면 반대편 사람이 승리함.
 
     public static void main(String[] args) throws Exception {
         BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
-        StringTokenizer st = new StringTokenizer(br.readLine());
-        N = Integer.parseInt(st.nextToken());
-        M = Integer.parseInt(st.nextToken());
-        int r = Integer.parseInt(st.nextToken());
-        dist = new int[N + 1][N + 1];
-        items = new int[N + 1];
+        long n = Long.parseLong(br.readLine());
 
-        for (int i = 1; i <= N; i++) {
-            Arrays.fill(dist[i], INF);
-            dist[i][i] = 0;
-        }
-        st = new StringTokenizer(br.readLine());
-        for (int i = 1; i <= N; i++) {
-            items[i] = Integer.parseInt(st.nextToken());
+        if ((n % 5) == 1 ||(n % 5) == 3 ||(n % 5) == 4 ) {
+            System.out.println("SK");
+        } else {
+            System.out.println("CY");
         }
 
-        while (r -- > 0) {
-            st = new StringTokenizer(br.readLine());
-            int start = Integer.parseInt(st.nextToken());
-            int end = Integer.parseInt(st.nextToken());
-            int distance = Integer.parseInt(st.nextToken());
-            dist[start][end] = distance;
-            dist[end][start] = distance;
-        }
-
-        for (int pass = 1; pass <= N; pass++) {
-            for (int start = 1; start <= N; start ++) {
-                for (int end = 1; end <= N; end ++) {
-                    if (dist[start][end] <= dist[start][pass] + dist[pass][end]) continue;
-                    dist[start][end] = dist[start][pass] + dist[pass][end];
-                }
-            }
-        }
-
-        int[] ans = new int[N + 1];
-
-        for (int start = 1; start <= N; start++) {
-            for (int end = 1; end <= N; end++) {
-                if (start == end) {
-                    ans[start] += items[end];
-                    continue;
-                }
-                if (dist[start][end] > M) continue;
-                ans[start] += items[end];
-            }
-        }
-        int outputAnswer = 0;
-
-        for (int i = 1 ; i <= N; i++) {
-            outputAnswer = Math.max(outputAnswer, ans[i]);
-        }
-
-        System.out.println(outputAnswer);
+        // mod 5 기준
+        // 4^x 는 mod 1 아니면 4
+        // 0 : sk 어떻게 하든 cy가 5의 배수로 만들기 가능 cy 승
+        // 1, 4 : sk 무조건 5의 배수로 만들기 가능 sk 승
+        // 2 : sk 1 빼간다면 cy 1빼서 cy 승
+        //     sk 4 빼간다면    mod5 3인 상태  -> cy는 다시 2인상태로 만들고 ... -> sk 4 빼감 -> cy 2로 만들고 ... 그러면 sk때 2가 됨 -> cy 승 (cy 무조건 승리)
+        // 3 : sk 1 빼간다면 cy턴에서 mod 2 -> 그러면 위에 의해서 sk가 승리
+        //     sk 4 빼간다면 mod 4 -> cy가 무조건 승리 (이 경우는 채택을 안하겠지 그러면)
 
     }
 

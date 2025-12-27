@@ -2,73 +2,102 @@ import java.io.*;
 import java.util.*;
 
 public class Main {
-    // https://www.acmicpc.net/problem/1306
-    // 1306 달려라 홍준
+    // https://www.acmicpc.net/problem/16947
+    // 16947 서울 지하철 2호선
+
+    // 첫번째 생각 - 플로이드?
+    // -> 순환선 어떻게 생각할거임?
+    // -> 시간복잡도 V^3 인데 3000 * 3000 * 3000 -> 90억이라 불가능
+
+    // 두번째 생각 - 텀프로젝트
+    // 계속 한방향으로 전진하면 이전에 방문한 배열을 다시 방문할 수 있음.
+    // 이거를 dfs 로?
 
     static int N;
-    static int M;
+    static List<Integer>[] adj;
+    static boolean[] visited;
+    static boolean[] isCycle;
+    static int[] dist;
 
-    static int[] bright;
-    static int[] tree;
+    // dfs를 돌면 무조건 순환하는건 알게 되어있음.
+    static int dfs(int current, int prev) {
+        visited[current] = true;
 
-    static void init(int node, int start, int end) {
-        if (start == end) {
-            tree[node] = bright[start];
-            return;
+        for (int nextNode : adj[current]) {
+            if (nextNode == prev) continue;
+
+            if (visited[nextNode]) {
+                isCycle[nextNode] = true;
+                isCycle[current] = true;
+                return nextNode;
+            }
+            // visited[nextNode] = false 이므로
+            int returnedNode = dfs(nextNode, current);
+
+            // 아래부터는 마킹하고 돌아온 상태
+            if (returnedNode != -1) {
+                isCycle[current] = true;
+
+                return (current == returnedNode)
+                        ? -1
+                        : returnedNode;
+            }
         }
-        init(node * 2, start, (start + end) / 2);
-        init(node * 2 + 1, (start + end) / 2 + 1, end);
-        tree[node] = Math.max(tree[node * 2] , tree[node * 2 + 1]);
+        return -1;
     }
 
-    static int query(int node, int left, int right, int start, int end) {
-        if (right < start || end < left) return Integer.MIN_VALUE;
-        if (left <= start && end <= right) return tree[node];
-        int leftMax = query(node * 2, left, right, start, (start + end) / 2);
-        int rightMax = query(node * 2 + 1, left, right, (start + end) / 2 + 1, end);
-        return Math.max(leftMax, rightMax);
+    static void bfs() {
+        Queue<Integer> Q = new ArrayDeque<>();
+
+        for (int i = 1 ; i <= N; i++) {
+            if (!isCycle[i]) continue;
+            Q.add(i);
+            dist[i] = 0;
+        }
+
+        while (!Q.isEmpty()) {
+            int cur = Q.poll();
+            for (int next : adj[cur]) {
+                if (isCycle[next] || (dist[next] != -1)) continue;
+                Q.add(next);
+                dist[next] = dist[cur] + 1;
+            }
+        }
     }
 
     public static void main(String[] args) throws Exception {
         BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
-        BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(System.out));
-        StringTokenizer st = new StringTokenizer(br.readLine());
+        N = Integer.parseInt(br.readLine());
+        adj = new ArrayList[N + 1];
+        visited = new boolean[N + 1];
+        isCycle = new boolean[N + 1];
+        dist = new int[N + 1];
+        Arrays.fill(dist, -1);
 
-        N = Integer.parseInt(st.nextToken());
-        M = Integer.parseInt(st.nextToken());
-
-        int height = (int) Math.ceil(Math.log(N) / Math.log(2)) + 1;
-        int size = (1 << height);
-
-        tree = new int[size];
-        bright = new int[N];
-
-        st = new StringTokenizer(br.readLine());
-
-        for (int i = 0 ; i < N; i++) {
-            bright[i] = Integer.parseInt(st.nextToken());
+        for (int i = 0 ; i <= N; i++) {
+            adj[i] = new ArrayList<>();
         }
 
-        init(1, 0, N-1);
+        int count = N;
+        while (count -- > 0) {
+            StringTokenizer st = new StringTokenizer(br.readLine());
+            int v1 = Integer.parseInt(st.nextToken());
+            int v2 = Integer.parseInt(st.nextToken());
 
-        // M번째 칸에서 뛰기 시작해서 N-M+1번째 칸에서 멈춘다
-        //
-        // 1 인덱스에서 (1, m, 2m - 1) ~ (n - m + 2 , n-m+1, )
-        // 0 인덱스 이므로 (0, m-1, 2m - 2) ~ (n - 1 - (2m-1)= n - 2m , n - 1)
-        // x + (2m - 2) = n - 1;
-        // x = n - 2m + 1
+            adj[v1].add(v2);
+            adj[v2].add(v1);
+        }
+
+        dfs(1, 0);
+        bfs();
 
         StringBuilder sb = new StringBuilder();
-
-        for (int i = 0 ; i <= N - 2*M + 1 ; i++) {
-            sb.append(query(1, i, i + (2* M - 2), 0, N - 1));
+        for (int i = 1 ; i <= N; i++) {
+            sb.append(dist[i]);
             sb.append(" ");
         }
-
-        bw.write(sb.toString());
-
-        bw.flush();
-
+        System.out.println(sb);
     }
+
 
 }

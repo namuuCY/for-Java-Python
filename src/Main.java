@@ -3,82 +3,59 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 public class Main {
-    // https://www.acmicpc.net/problem/13334
-    // 13334 철로
+    // https://www.acmicpc.net/problem/14725
+    // 14725 개미굴
+
+    // 입력으로 트리를 구성하고, DFS로 출력하면 된다
+    // 이름순이라고 했으니 각각의 인접리스트에서 정렬을 이름순으로 해줘야 하고
+    // 이름 <-> 인덱스 를 저장하는 맵이 있으면 될듯???... -> 불가능. 이름이 중복 될 수 있음.
+    // 입력을 다 받고, 받으면서 각 높이별 리스트 생성
+    // 받은 입력 토대로 인접 리스트 완성하기
+    // 입력은 일단 이름은 names에 저장, 인접리스트는 당장 완성하는게 아니라
+    // 일단 입력을 다 받은 후에
+
 
     static int N;
-    static int d;
-    static PriorityQueue<Integer> pq = new PriorityQueue<>();
-    static List<Route> routes;
+    static Node root;
 
-    // 일단 bf로 푸는 경우 :
-    // 모든 집, 사무실 을 L 범위에 맞게 필터링해서 최대크기를 찾는 것
-    // L 범위는 그러면 어떻게 결정? -> L은 ???
-    // 시작점, 끝점을 모두 후보로?
-    // 모두 후보로...?
-
-    static class Route implements Comparable<Route> {
-        int start;
-        int end;
-
-        Route(int v1, int v2) {
-            if (v1 < v2) {
-                this.start = v1;
-                this.end = v2;
-            } else {
-                this.start = v2;
-                this.end = v1;
-            }
-        }
-
-        public int compareTo(Route that) {
-            if (this.end != that.end) {
-                return this.end - that.end;
-            } else {
-                return this.start - that.start;
-            }
-        }
+    static class Node {
+        Map<String, Node> children = new TreeMap<>();
     }
 
-    static void checkAndPoll(int startPoint) {
-        // pq가 비어있지 않으면 체크
-        // 있다면 마지막
-        while (!pq.isEmpty() ) {
-            if (pq.peek() < startPoint) {
-                pq.poll();
-                continue;
+    static void dfs(Node current, StringBuilder sb, int count) {
+        for (String n : current.children.keySet()) {
+            for (int i = 0; i < count ; i++) {
+                sb.append("--");
             }
-            break;
+            sb.append(n);
+            sb.append("\n");
+            dfs(current.children.get(n), sb, count + 1);
         }
     }
 
     public static void main(String[] args) throws Exception {
         BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
+        BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(System.out));
+
         N = Integer.parseInt(br.readLine());
-        int temp = N;
 
-        List<Route> tempList = new ArrayList<>();
-        while (temp -- > 0) {
-            // 집, 사무실 모두 포함이니까 순서 바꿔도 동일, 오름차순 되도록 정렬 후 저장
-            String[] input = br.readLine().strip().split(" ");
-            int p1 = Integer.parseInt(input[0]);
-            int p2 = Integer.parseInt(input[1]);
+        root = new Node();
 
-            tempList.add(new Route(p1, p2));
+        while (N-- > 0) {
+            String[] st = br.readLine().strip().split(" ");
+            int temp = Integer.parseInt(st[0]);
+            Node current = root;
+            for (int i = 1; i <= temp ; i++) {
+                String start = st[i];
+                current.children.putIfAbsent(start, new Node());
+                current = current.children.get(start);
+            }
         }
 
-        d = Integer.parseInt(br.readLine());
+        StringBuilder sb = new StringBuilder();
+        dfs(root, sb, 0);
 
-        routes = tempList.stream().sorted().collect(Collectors.toList());
-
-        int ans = 0;
-
-        for (Route r : routes) {
-            pq.add(r.start);
-            checkAndPoll(r.end - d);
-            ans = Math.max(ans, pq.size());
-        }
-
-        System.out.println(ans);
+        bw.write(sb.toString());
+        bw.flush();
     }
 }

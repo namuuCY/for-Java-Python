@@ -1,151 +1,84 @@
 import java.io.*;
 import java.util.*;
+import java.util.stream.Collectors;
 
 public class Main {
     // https://www.acmicpc.net/problem/13334
     // 13334 철로
 
-
-
     static int N;
-    static List<Integer>[] adj;
-    static boolean[] visited;
-    static boolean[] isCycle;
-    static int[] dist;
+    static int d;
+    static PriorityQueue<Integer> pq = new PriorityQueue<>();
+    static List<Route> routes;
 
-    // dfs를 돌면 무조건 순환하는건 알게 되어있음.
-    static int dfs(int current, int prev) {
-        visited[current] = true;
+    // 일단 bf로 푸는 경우 :
+    // 모든 집, 사무실 을 L 범위에 맞게 필터링해서 최대크기를 찾는 것
+    // L 범위는 그러면 어떻게 결정? -> L은 ???
+    // 시작점, 끝점을 모두 후보로?
+    // 모두 후보로...?
 
-        for (int next : adj[current]) {
-            if (next == prev) continue;
+    static class Route implements Comparable<Route> {
+        int start;
+        int end;
 
-            // 방문한 것이라면
-            if (visited[next]) {
-                isCycle[next] = true;
-                isCycle[current] = true;
-                return next;
-            }
-
-            // 방문하지 않은 경우
-            int returnedNode = dfs(next, current);
-
-            // 순환선 찾아서 마킹하고 돌아오는 케이스
-            // 중에서 아직 순환 마킹 후 백트래킹 상태인지 확인
-            if (returnedNode != -1) {
-                isCycle[current] = true;
-                return (current == returnedNode)
-                        ? -1
-                        : returnedNode;
+        Route(int v1, int v2) {
+            if (v1 < v2) {
+                this.start = v1;
+                this.end = v2;
+            } else {
+                this.start = v2;
+                this.end = v1;
             }
         }
 
-        return -1;
+        public int compareTo(Route that) {
+            if (this.end != that.end) {
+                return this.end - that.end;
+            } else {
+                return this.start - that.start;
+            }
+        }
     }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-//
-//    visited[current] = true;
-//
-//        for (int nextNode : adj[current]) {
-//        if (nextNode == prev) continue;
-//
-//        if (visited[nextNode]) {
-//            isCycle[nextNode] = true;
-//            isCycle[current] = true;
-//            return nextNode;
-//        }
-//        // visited[nextNode] = false 이므로
-//        int returnedNode = dfs(nextNode, current);
-//
-//        // 아래부터는 마킹하고 돌아온 상태
-//        if (returnedNode != -1) {
-//            isCycle[current] = true;
-//
-//            return (current == returnedNode)
-//                    ? -1
-//                    : returnedNode;
-//        }
-//    }
-//        return -1;
-
-    static void bfs() {
-        Queue<Integer> Q = new ArrayDeque<>();
-
-        for (int i = 1 ; i <= N; i++) {
-            if (!isCycle[i]) continue;
-            Q.add(i);
-            dist[i] = 0;
-        }
-
-        while (!Q.isEmpty()) {
-            int cur = Q.poll();
-            for (int next : adj[cur]) {
-                if (isCycle[next] || (dist[next] != -1)) continue;
-                Q.add(next);
-                dist[next] = dist[cur] + 1;
+    static void checkAndPoll(int startPoint) {
+        // pq가 비어있지 않으면 체크
+        // 있다면 마지막
+        while (!pq.isEmpty() ) {
+            if (pq.peek() < startPoint) {
+                pq.poll();
+                continue;
             }
+            break;
         }
     }
 
     public static void main(String[] args) throws Exception {
         BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
         N = Integer.parseInt(br.readLine());
-        adj = new ArrayList[N + 1];
-        visited = new boolean[N + 1];
-        isCycle = new boolean[N + 1];
-        dist = new int[N + 1];
-        Arrays.fill(dist, -1);
+        int temp = N;
 
-        for (int i = 0 ; i <= N; i++) {
-            adj[i] = new ArrayList<>();
+        List<Route> tempList = new ArrayList<>();
+        while (temp -- > 0) {
+            // 집, 사무실 모두 포함이니까 순서 바꿔도 동일, 오름차순 되도록 정렬 후 저장
+            String[] input = br.readLine().strip().split(" ");
+            int p1 = Integer.parseInt(input[0]);
+            int p2 = Integer.parseInt(input[1]);
+
+            tempList.add(new Route(p1, p2));
         }
 
-        int count = N;
-        while (count -- > 0) {
-            StringTokenizer st = new StringTokenizer(br.readLine());
-            int v1 = Integer.parseInt(st.nextToken());
-            int v2 = Integer.parseInt(st.nextToken());
+        d = Integer.parseInt(br.readLine());
 
-            adj[v1].add(v2);
-            adj[v2].add(v1);
+        routes = tempList.stream().sorted().collect(Collectors.toList());
+
+        int ans = 0;
+
+        for (Route r : routes) {
+            pq.add(r.start);
+            checkAndPoll(r.end - d);
+            ans = Math.max(ans, pq.size());
         }
 
-        dfs(1, 0);
-        bfs();
-
-        StringBuilder sb = new StringBuilder();
-        for (int i = 1 ; i <= N; i++) {
-            sb.append(dist[i]);
-            sb.append(" ");
-        }
-        System.out.println(sb);
+        System.out.println(ans);
     }
-
-
 }

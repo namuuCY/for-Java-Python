@@ -2,16 +2,10 @@ import java.io.*;
 import java.util.*;
 
 public class Main {
-    // https://www.acmicpc.net/problem/16947
-    // 16947 서울 지하철 2호선
+    // https://www.acmicpc.net/problem/13334
+    // 13334 철로
 
-    // 첫번째 생각 - 플로이드?
-    // -> 순환선 어떻게 생각할거임?
-    // -> 시간복잡도 V^3 인데 3000 * 3000 * 3000 -> 90억이라 불가능
 
-    // 두번째 생각 - 텀프로젝트
-    // 계속 한방향으로 전진하면 이전에 방문한 배열을 다시 방문할 수 있음.
-    // 이거를 dfs 로?
 
     static int N;
     static List<Integer>[] adj;
@@ -23,28 +17,82 @@ public class Main {
     static int dfs(int current, int prev) {
         visited[current] = true;
 
-        for (int nextNode : adj[current]) {
-            if (nextNode == prev) continue;
+        for (int next : adj[current]) {
+            if (next == prev) continue;
 
-            if (visited[nextNode]) {
-                isCycle[nextNode] = true;
+            // 방문한 것이라면
+            if (visited[next]) {
+                isCycle[next] = true;
                 isCycle[current] = true;
-                return nextNode;
+                return next;
             }
-            // visited[nextNode] = false 이므로
-            int returnedNode = dfs(nextNode, current);
 
-            // 아래부터는 마킹하고 돌아온 상태
+            // 방문하지 않은 경우
+            int returnedNode = dfs(next, current);
+
+            // 순환선 찾아서 마킹하고 돌아오는 케이스
+            // 중에서 아직 순환 마킹 후 백트래킹 상태인지 확인
             if (returnedNode != -1) {
                 isCycle[current] = true;
-
                 return (current == returnedNode)
                         ? -1
                         : returnedNode;
             }
         }
+
         return -1;
     }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+//
+//    visited[current] = true;
+//
+//        for (int nextNode : adj[current]) {
+//        if (nextNode == prev) continue;
+//
+//        if (visited[nextNode]) {
+//            isCycle[nextNode] = true;
+//            isCycle[current] = true;
+//            return nextNode;
+//        }
+//        // visited[nextNode] = false 이므로
+//        int returnedNode = dfs(nextNode, current);
+//
+//        // 아래부터는 마킹하고 돌아온 상태
+//        if (returnedNode != -1) {
+//            isCycle[current] = true;
+//
+//            return (current == returnedNode)
+//                    ? -1
+//                    : returnedNode;
+//        }
+//    }
+//        return -1;
 
     static void bfs() {
         Queue<Integer> Q = new ArrayDeque<>();

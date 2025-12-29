@@ -3,34 +3,36 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 public class Main {
-    // https://www.acmicpc.net/problem/14725
-    // 14725 개미굴
-
-    // 입력으로 트리를 구성하고, DFS로 출력하면 된다
-    // 이름순이라고 했으니 각각의 인접리스트에서 정렬을 이름순으로 해줘야 하고
-    // 이름 <-> 인덱스 를 저장하는 맵이 있으면 될듯???... -> 불가능. 이름이 중복 될 수 있음.
-    // 입력을 다 받고, 받으면서 각 높이별 리스트 생성
-    // 받은 입력 토대로 인접 리스트 완성하기
-    // 입력은 일단 이름은 names에 저장, 인접리스트는 당장 완성하는게 아니라
-    // 일단 입력을 다 받은 후에
-
+    // https://www.acmicpc.net/problem/1655
+    // 1655 가운데를 말해요
 
     static int N;
-    static Node root;
+    static int MIN = -1_000_000;
+    static int MAX = 1_000_000;
+    // lq는 최대힙
+    // 아래 람다식이 안됐던 이유 :
+    // 초기값이 integer min value라 int overflow가 났던 것
+    static PriorityQueue<Integer> lq = new PriorityQueue<>((a, b) -> b - a);
+    static PriorityQueue<Integer> uq = new PriorityQueue<>();
 
-    static class Node {
-        Map<String, Node> children = new TreeMap<>();
+    // lq == uq 일 떄
+    static void equal(int val) {
+        if (val <= uq.peek()) {
+            lq.add(val);
+            return;
+        }
+        lq.add(uq.poll());
+        uq.add(val);
     }
 
-    static void dfs(Node current, StringBuilder sb, int count) {
-        for (String n : current.children.keySet()) {
-            for (int i = 0; i < count ; i++) {
-                sb.append("--");
-            }
-            sb.append(n);
-            sb.append("\n");
-            dfs(current.children.get(n), sb, count + 1);
+    // lq + 1 == uq 일 때
+    static void nonEqual(int val) {
+        if (val >= lq.peek()) {
+            uq.add(val);
+            return;
         }
+        uq.add(lq.poll());
+        lq.add(val);
     }
 
     public static void main(String[] args) throws Exception {
@@ -38,23 +40,22 @@ public class Main {
         BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(System.out));
 
         N = Integer.parseInt(br.readLine());
-
-        root = new Node();
-
-        while (N-- > 0) {
-            String[] st = br.readLine().strip().split(" ");
-            int temp = Integer.parseInt(st[0]);
-            Node current = root;
-            for (int i = 1; i <= temp ; i++) {
-                String start = st[i];
-                current.children.putIfAbsent(start, new Node());
-                current = current.children.get(start);
-            }
-        }
+        lq.add(MIN);
+        uq.add(MAX);
 
         StringBuilder sb = new StringBuilder();
-        dfs(root, sb, 0);
-
+        for (int i = 0 ; i < N; i++ ) {
+            if (i != 0) {
+                sb.append("\n");
+            }
+            int val = Integer.parseInt(br.readLine());
+            if (i % 2 == 0) {
+                equal(val);
+            } else {
+                nonEqual(val);
+            }
+            sb.append(lq.peek());
+        }
         bw.write(sb.toString());
         bw.flush();
     }

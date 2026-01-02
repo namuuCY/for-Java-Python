@@ -1,7 +1,9 @@
+package template;
+
 import java.io.*;
 import java.util.*;
 
-public class Main {
+public class Dijkstra {
 	// https://www.acmicpc.net/problem/1753
 	// 1753 최단 경로
 

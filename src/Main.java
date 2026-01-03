@@ -2,110 +2,85 @@ import java.io.*;
 import java.util.*;
 
 public class Main {
-    // https://www.acmicpc.net/problem/20183
-    // 20183 골목 대장 호석 - 효율성 2
+    // https://www.acmicpc.net/problem/1561
+    // 1561 놀이공원
 
-    static int V, E, start, end, maxW;
-    static long C;
-    static List<Node>[] adj;
-    static PriorityQueue<Node> PQ = new PriorityQueue<>();
-    static long[] dist;
-
-    static class Node implements Comparable<Node> {
-        int idx;
-        long cost;
-
-        Node(int idx, long cost) {
-            this.idx = idx;
-            this.cost = cost;
-        }
-
-        public int compareTo(Node that) {
-            if (this.cost != that.cost) return Long.compare(this.cost, that.cost);
-            return this.idx - that.idx;
-        }
-    }
-
+    static int N; // N 은 20억 이하
+    static int M; // M 은 1이상 1만 이하.
+    static int[] attractions; // 미리 정적 배열을 정해두면, 캐시히트율을 높여 빠른 조회및 연산가능.
+    // List<Integer>는 이에 비하면 데이터를 너무 많이 먹는다
+    static int minAttractionTime;
+    static int ans;
 
     public static void main(String[] args) throws Exception {
         BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
+        inputProcess(br);
+
+
+    }
+
+
+    private static void inputProcess(BufferedReader br) throws IOException {
         StringTokenizer st = new StringTokenizer(br.readLine());
 
-        V = Integer.parseInt(st.nextToken());
-        E = Integer.parseInt(st.nextToken());
-        start = Integer.parseInt(st.nextToken());
-        end = Integer.parseInt(st.nextToken());
-        C = Long.parseLong(st.nextToken());
+        N = Integer.parseInt(st.nextToken());
+        M = Integer.parseInt(st.nextToken());
+        attractions = new int[M + 1];
+        st = new StringTokenizer(br.readLine());
 
-        adj = new ArrayList[V + 1];
-        dist = new long[V + 1];
-        for (int i = 1 ; i <= V ; i++) {
-            adj[i] = new ArrayList<>();
-        }
-        maxW = 0;
-        while (E -- > 0) {
-            st = new StringTokenizer(br.readLine());
-            int v1 = Integer.parseInt(st.nextToken());
-            int v2 = Integer.parseInt(st.nextToken());
-            int cost = Integer.parseInt(st.nextToken());
-            adj[v1].add(new Node(v2, cost));
-            adj[v2].add(new Node(v1, cost));
-            maxW = Math.max(maxW, cost);
+        minAttractionTime = Integer.MAX_VALUE;
+        for (int i = 1; i <= M; i++) {
+            attractions[i] = Integer.parseInt(st.nextToken());
+            minAttractionTime = Math.min(minAttractionTime, attractions[i]);
         }
 
-        int ans = parametricSearch();
+        parametricSearch();
+
         System.out.println(ans);
     }
 
-    private static int parametricSearch() {
-        int startValue = 1;
-        int endValue = maxW;
-        int ans = -1;
+    private static void parametricSearch() {
+        int startTime = 0;
+        int endTime = (N / minAttractionTime) + 1;
 
-        while (startValue <= endValue) {
-            int midValue = (startValue + endValue) / 2;
-            boolean isAvailable = checkByDijkstra(midValue);
-            if (isAvailable) {
-                ans = midValue;
-                endValue = midValue - 1;
+        while (startTime <= endTime) {
+            int midTime = (startTime + endTime) / 2;
+            int compareResult = entryCompare(midTime);
+            if (compareResult == 0) return;
+            if (compareResult < 0) {
+                endTime = midTime - 1;
             } else {
-                startValue = midValue + 1;
+                startTime = midTime + 1;
             }
         }
-        return ans;
     }
 
-    private static boolean checkByDijkstra(int maxRestrict) {
-        // maxRestrict 보다 큰 간선은 pass;
-        PQ.clear();
-        Arrays.fill(dist, Long.MAX_VALUE);
-        dist[start] = 0;
-        PQ.add(new Node(start, 0));
+    private static int entryCompare(int time) {
+        int current = lastEntries(time);
 
-        while (!PQ.isEmpty()) {
-            Node currentNode = PQ.poll();
-            int currentNodeIdx = currentNode.idx;
+        if (N < current) {
+            return -1;
+        }
 
-            // [수정 1] 이미 비용이 C를 초과했다면 더 볼 필요 없음 (Pruning)
-            if (currentNode.cost > C) continue;
-
-            // [수정 2] 조기 종료 추가
-            if (currentNodeIdx == end) return true;
-
-            if (dist[currentNodeIdx] < currentNode.cost) continue;
-
-            for (Node nextNode : adj[currentNodeIdx]) {
-                if (nextNode.cost > maxRestrict) continue;
-                if (dist[nextNode.idx] > dist[currentNodeIdx] + nextNode.cost) {
-                    dist[nextNode.idx] = dist[currentNodeIdx] + nextNode.cost;
-                    PQ.add(new Node(nextNode.idx, dist[nextNode.idx]));
-                }
+        for (int i = 1; i <= M; i++) {
+            current += (time % attractions[i] == 0) ? 1 : 0;
+            if (current == N) {
+                ans = i;
+                return 0;
             }
         }
 
-        return dist[end] <= C;
+        return 1;
     }
 
-
-
+    private static int lastEntries(int time) {
+        int sum = 0;
+        for (int i = 1; i <= M; i++) {
+            sum += (time / attractions[i]);
+            sum += (time % attractions[i] == 0) ? 0 : 1;
+        }
+        return sum;
+    }
+    // 여기까지 문제 : 파라메트릭 서치를 명확히 하지 않음.
+    // 언제 시간인지를 확인하는 것에만 사용해야함. (지금은 두개의 작업이 이뤄지고 있음.)
 }

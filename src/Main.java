@@ -2,83 +2,123 @@ import java.io.*;
 import java.util.*;
 
 public class Main {
-    // https://www.acmicpc.net/problem/1561
-    // 1561 놀이공원
+    // https://www.acmicpc.net/problem/4485
+    // 4485 녹색 옷 입은 애가 젤다지?
 
-    static int N; // N 은 20억 이하
-    static int M; // M 은 1이상 1만 이하.
-    static int[] attractions; // 미리 정적 배열을 정해두면, 캐시히트율을 높여 빠른 조회및 연산가능.
-    // List<Integer>는 이에 비하면 데이터를 너무 많이 먹는다
-    static int minAttractionTime;
-    static int ans;
+    static class Node implements Comparable<Node> {
+        int r;
+        int c;
+        int cost;
+
+        Node(int r, int c, int cost) {
+            this.r = r;
+            this.c = c;
+            this.cost = cost;
+        }
+
+        public int compareTo(Node that) {
+            return Integer.compare(this.cost, that.cost);
+        }
+    }
 
     public static void main(String[] args) throws Exception {
         BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
-        inputProcess(br);
 
-        parametricSearch();
-        System.out.println(ans);
-    }
+        int trial = 1;
 
+        while (true) {
+            int N = Integer.parseInt(br.readLine().trim());
+            if (N == 0) break;
 
-    private static void inputProcess(BufferedReader br) throws IOException {
-        StringTokenizer st = new StringTokenizer(br.readLine());
+            int[][] twoDimGrid = parseInput(N, br);
 
-        N = Integer.parseInt(st.nextToken());
-        M = Integer.parseInt(st.nextToken());
-        attractions = new int[M + 1];
-        st = new StringTokenizer(br.readLine());
+            // 다익스트라 로직
+            Integer minCost = processQuery(twoDimGrid, N);
 
-        minAttractionTime = Integer.MAX_VALUE;
-        for (int i = 1; i <= M; i++) {
-            attractions[i] = Integer.parseInt(st.nextToken());
-            minAttractionTime = Math.min(minAttractionTime, attractions[i]);
+            System.out.printf("Problem %d: %d", trial, minCost);
+            System.out.println();
+            trial ++;
         }
     }
 
-    private static void parametricSearch() {
-        long startTime = 0;
-        long endTime = (long) (N + 1) * (long) minAttractionTime;
-
-        while (startTime <= endTime) {
-            long midTime = (startTime + endTime) / 2;
-            int compareResult = entryCompare(midTime);
-            if (compareResult == 0) return;
-            if (compareResult < 0) {
-                endTime = midTime - 1;
-            } else {
-                startTime = midTime + 1;
+    private static int[][] parseInput(int size, BufferedReader br) throws IOException {
+        int[][] twoDimGrid = new int[size][size];
+        for (int i = 0; i < size; i++) {
+            StringTokenizer st = new StringTokenizer(br.readLine().strip());
+            for (int j = 0 ; j < size; j++) {
+                Integer thiefRupee = Integer.parseInt(st.nextToken());
+                twoDimGrid[i][j] = thiefRupee;
             }
         }
+        return twoDimGrid;
     }
 
-    private static int entryCompare(long time) {
-        long current = lastEntries(time);
+    private static Integer processQuery(int[][] twoDimGrid, int size) {
+        // 다익스트라를 위한 초기화 작업
+        PriorityQueue<Node> minCostQueue = new PriorityQueue<>();
+        // twoDimGrid를 클래스 새로 선언해도 좀 더 객체지향적으로 하는게 가능해보입니다.
+        int baseCost = twoDimGrid[0][0];
+        Node initNode = new Node(0, 0, baseCost);
+        int[][] currentCostGrid = initDijkstraGrid(size);
 
-        if (N <= current) {
-            return -1;
+        return runDijkstra(minCostQueue, initNode, currentCostGrid, size, twoDimGrid);
+    }
+
+    private static int[][] initDijkstraGrid(int size) {
+        int[][] initiated = new int[size][size];
+        for (int i = 0 ; i < size ; i++) {
+            Arrays.fill(initiated[i], Integer.MAX_VALUE);
         }
+        return initiated;
+    }
 
-        for (int i = 1; i <= M; i++) {
-            if (time % attractions[i] != 0) continue;
-            current ++;
-            if (current == N) {
-                ans = i;
-                return 0;
+    private static int runDijkstra(
+            PriorityQueue<Node> minCostQueue,
+            Node initNode,
+            int[][] currentCostGrid,
+            int size,
+            int[][] twoDimGrid) {
+        minCostQueue.add(initNode);
+        currentCostGrid[0][0] = initNode.cost;
+
+        int[] diffR = new int[]{1, 0, -1, 0};
+        int[] diffC = new int[]{0, 1, 0, -1};
+
+        while (!minCostQueue.isEmpty()) {
+            Node currentNode = minCostQueue.poll();
+
+            if (currentCostGrid[currentNode.r][currentNode.c] < currentNode.cost) continue;
+            if (currentNode.r == size -1
+            && currentNode.c == size -1) {
+                return currentCostGrid[currentNode.r][currentNode.c];
+            }
+
+            for (int dir = 0; dir < 4; dir ++) {
+                int nextRow = currentNode.r + diffR[dir];
+                int nextColumn = currentNode.c + diffC[dir];
+                if ( isOutOfBounds( size, nextRow, nextColumn)) continue;
+                if (currentCostGrid[nextRow][nextColumn]
+                        > currentCostGrid[currentNode.r][currentNode.c]
+                        + twoDimGrid[nextRow][nextColumn]
+                ) {
+                    currentCostGrid[nextRow][nextColumn]
+                            = currentCostGrid[currentNode.r][currentNode.c]
+                            + twoDimGrid[nextRow][nextColumn];
+                    minCostQueue.add(
+                            new Node(
+                                    nextRow, nextColumn,
+                                    currentCostGrid[nextRow][nextColumn]
+                            )
+                    );
+                }
             }
         }
-
-        return 1;
+        return currentCostGrid[size - 1][size - 1];
     }
 
-    private static long lastEntries(long time) {
-        long sum = 0;
-        for (int i = 1; i <= M; i++) {
-            sum += (time / attractions[i]);
-            sum += (time % attractions[i] == 0) ? 0 : 1;
-        }
-        return sum;
+    private static boolean isOutOfBounds(int size, int row, int column) {
+        return row < 0 || row >= size || column < 0 || column >= size;
     }
-    // 여기까지 문제 : 파라메트릭 서치를 명확히 하지 않음.
-    // 언제 시간인지를 확인하는 것에만 사용해야함. (지금은 두 개의 작업이 이뤄지고 있음.)
+
+
 }

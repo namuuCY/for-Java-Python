@@ -2,123 +2,56 @@ import java.io.*;
 import java.util.*;
 
 public class Main {
-    // https://www.acmicpc.net/problem/4485
-    // 4485 녹색 옷 입은 애가 젤다지?
+    // https://www.acmicpc.net/problem/1925
+    // 1925 삼각형
 
-    static class Node implements Comparable<Node> {
-        int r;
-        int c;
-        int cost;
-
-        Node(int r, int c, int cost) {
-            this.r = r;
-            this.c = c;
-            this.cost = cost;
-        }
-
-        public int compareTo(Node that) {
-            return Integer.compare(this.cost, that.cost);
-        }
-    }
-
-    public static void main(String[] args) throws Exception {
+    public static void main(String[] args) throws IOException {
         BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
 
-        int trial = 1;
+        long[] x = new long[3];
+        long[] y = new long[3];
 
-        while (true) {
-            int N = Integer.parseInt(br.readLine().trim());
-            if (N == 0) break;
+        for (int i = 0; i < 3; i++) {
+            StringTokenizer st = new StringTokenizer(br.readLine());
+            x[i] = Long.parseLong(st.nextToken());
+            y[i] = Long.parseLong(st.nextToken());
+        }
 
-            int[][] twoDimGrid = parseInput(N, br);
+        // 1. 세 점이 일직선 위에 있는지 확인 (CCW / 외적 활용)
+        // (x2-x1)*(y3-y1) - (y2-y1)*(x3-x1)
+        long ccw = (x[1] - x[0]) * (y[2] - x[0]) - (y[1] - y[0]) * (x[2] - x[0]); // 오타 수정: y[2]-y[0] 이어야 함. 아래 수정된 로직 참고.
 
-            // 다익스트라 로직
-            Integer minCost = processQuery(twoDimGrid, N);
+        // 정확한 기울기 비교 (교차 곱셈): (y2-y1)/(x2-x1) == (y3-y2)/(x3-x2)
+        // -> (y2-y1)*(x3-x2) == (y3-y2)*(x2-x1)
+        if ((y[1] - y[0]) * (x[2] - x[1]) == (y[2] - y[1]) * (x[1] - x[0])) {
+            System.out.println("X");
+            return;
+        }
 
-            System.out.printf("Problem %d: %d", trial, minCost);
-            System.out.println();
-            trial ++;
+        long[] lenSq = new long[3];
+        lenSq[0] = getDistSq(x[0], y[0], x[1], y[1]);
+        lenSq[1] = getDistSq(x[1], y[1], x[2], y[2]);
+        lenSq[2] = getDistSq(x[2], y[2], x[0], y[0]);
+
+        Arrays.sort(lenSq);
+        long a = lenSq[0];
+        long b = lenSq[1];
+        long c = lenSq[2]; // 가장 긴 변
+
+        if (a == c) { // a==b && b==c 와 동일
+            System.out.println("JungTriangle");
+        } else if (a == b || b == c) { // 이등변삼각형 (정삼각형 아님은 위에서 걸러짐)
+            if (c > a + b) System.out.println("Dunkak2Triangle"); // 둔각
+            else if (c == a + b) System.out.println("Jikkak2Triangle"); // 직각
+            else System.out.println("Yeahkak2Triangle"); // 예각
+        } else { // 일반 삼각형 (세 변 다름)
+            if (c > a + b) System.out.println("DunkakTriangle");
+            else if (c == a + b) System.out.println("JikkakTriangle");
+            else System.out.println("YeahkakTriangle");
         }
     }
 
-    private static int[][] parseInput(int size, BufferedReader br) throws IOException {
-        int[][] twoDimGrid = new int[size][size];
-        for (int i = 0; i < size; i++) {
-            StringTokenizer st = new StringTokenizer(br.readLine().strip());
-            for (int j = 0 ; j < size; j++) {
-                Integer thiefRupee = Integer.parseInt(st.nextToken());
-                twoDimGrid[i][j] = thiefRupee;
-            }
-        }
-        return twoDimGrid;
+    private static long getDistSq(long x1, long y1, long x2, long y2) {
+        return (x1 - x2) * (x1 - x2) + (y1 - y2) * (y1 - y2);
     }
-
-    private static Integer processQuery(int[][] twoDimGrid, int size) {
-        // 다익스트라를 위한 초기화 작업
-        PriorityQueue<Node> minCostQueue = new PriorityQueue<>();
-        // twoDimGrid를 클래스 새로 선언해도 좀 더 객체지향적으로 하는게 가능해보입니다.
-        int baseCost = twoDimGrid[0][0];
-        Node initNode = new Node(0, 0, baseCost);
-        int[][] currentCostGrid = initDijkstraGrid(size);
-
-        return runDijkstra(minCostQueue, initNode, currentCostGrid, size, twoDimGrid);
-    }
-
-    private static int[][] initDijkstraGrid(int size) {
-        int[][] initiated = new int[size][size];
-        for (int i = 0 ; i < size ; i++) {
-            Arrays.fill(initiated[i], Integer.MAX_VALUE);
-        }
-        return initiated;
-    }
-
-    private static int runDijkstra(
-            PriorityQueue<Node> minCostQueue,
-            Node initNode,
-            int[][] currentCostGrid,
-            int size,
-            int[][] twoDimGrid) {
-        minCostQueue.add(initNode);
-        currentCostGrid[0][0] = initNode.cost;
-
-        int[] diffR = new int[]{1, 0, -1, 0};
-        int[] diffC = new int[]{0, 1, 0, -1};
-
-        while (!minCostQueue.isEmpty()) {
-            Node currentNode = minCostQueue.poll();
-
-            if (currentCostGrid[currentNode.r][currentNode.c] < currentNode.cost) continue;
-            if (currentNode.r == size -1
-            && currentNode.c == size -1) {
-                return currentCostGrid[currentNode.r][currentNode.c];
-            }
-
-            for (int dir = 0; dir < 4; dir ++) {
-                int nextRow = currentNode.r + diffR[dir];
-                int nextColumn = currentNode.c + diffC[dir];
-                if ( isOutOfBounds( size, nextRow, nextColumn)) continue;
-                if (currentCostGrid[nextRow][nextColumn]
-                        > currentCostGrid[currentNode.r][currentNode.c]
-                        + twoDimGrid[nextRow][nextColumn]
-                ) {
-                    currentCostGrid[nextRow][nextColumn]
-                            = currentCostGrid[currentNode.r][currentNode.c]
-                            + twoDimGrid[nextRow][nextColumn];
-                    minCostQueue.add(
-                            new Node(
-                                    nextRow, nextColumn,
-                                    currentCostGrid[nextRow][nextColumn]
-                            )
-                    );
-                }
-            }
-        }
-        return currentCostGrid[size - 1][size - 1];
-    }
-
-    private static boolean isOutOfBounds(int size, int row, int column) {
-        return row < 0 || row >= size || column < 0 || column >= size;
-    }
-
-
 }

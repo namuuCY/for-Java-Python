@@ -1,57 +1,159 @@
 import java.io.*;
 import java.util.*;
+import java.util.stream.Stream;
 
 public class Main {
-    // https://www.acmicpc.net/problem/1925
-    // 1925 삼각형
+    // https://www.acmicpc.net/problem/3987
+    // 3987 보이저 1호
 
     public static void main(String[] args) throws IOException {
         BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
 
-        long[] x = new long[3];
-        long[] y = new long[3];
+        StringTokenizer st = new StringTokenizer(br.readLine().strip());
+        int N = Integer.parseInt(st.nextToken());
+        int M = Integer.parseInt(st.nextToken());
 
-        for (int i = 0; i < 3; i++) {
-            StringTokenizer st = new StringTokenizer(br.readLine());
-            x[i] = Long.parseLong(st.nextToken());
-            y[i] = Long.parseLong(st.nextToken());
+        char[][] twoDimGrid = initGrid(br, N, M);
+
+        st = new StringTokenizer(br.readLine().strip());
+        int voyagerRow = Integer.parseInt(st.nextToken()) - 1;
+        int voyagerColumn = Integer.parseInt(st.nextToken()) - 1;
+
+        int[] travelTimes = new int[4];
+
+        if (!(twoDimGrid[voyagerRow][voyagerColumn] == 'C')) {
+            // todo : 메인 로직
+            for (int direction = 0; direction < 4; direction++) {
+                travelTimes[direction] = simulateByDirection(voyagerRow, voyagerColumn, N, M, direction, twoDimGrid);
+                if (travelTimes[direction] == Integer.MAX_VALUE) break;
+            }
         }
+        // 아래와 같은 방식으로
+//        if ((twoDimGrid[voyagerRow][voyagerColumn] == '\\')) {
+//            for (int direction = 0; direction < 4; direction++) {
+//                int reflected = reflectDirection(true, direction);
+//                travelTimes[direction] = simulateByDirection(voyagerRow, voyagerColumn, N, M, reflected, twoDimGrid);
+//                if (travelTimes[direction] == Integer.MAX_VALUE) break;
+//            }
+//        } else if ((twoDimGrid[voyagerRow][voyagerColumn] == '/')) {
+//            for (int direction = 0; direction < 4; direction++) {
+//                int reflected = reflectDirection(false, direction);
+//                travelTimes[direction] = simulateByDirection(voyagerRow, voyagerColumn, N, M, reflected, twoDimGrid);
+//                if (travelTimes[direction] == Integer.MAX_VALUE) break;
+//            }
+//        } else if ( 블랙홀일때 )
+        decideAndWriteOutput(travelTimes);
+    }
 
-        // 1. 세 점이 일직선 위에 있는지 확인 (CCW / 외적 활용)
-        // (x2-x1)*(y3-y1) - (y2-y1)*(x3-x1)
-        long ccw = (x[1] - x[0]) * (y[2] - x[0]) - (y[1] - y[0]) * (x[2] - x[0]); // 오타 수정: y[2]-y[0] 이어야 함. 아래 수정된 로직 참고.
+    private static char[][] initGrid(BufferedReader br, int rowSize, int columnSize) throws IOException {
+        char[][] charGrid = new char[rowSize][columnSize];
 
-        // 정확한 기울기 비교 (교차 곱셈): (y2-y1)/(x2-x1) == (y3-y2)/(x3-x2)
-        // -> (y2-y1)*(x3-x2) == (y3-y2)*(x2-x1)
-        if ((y[1] - y[0]) * (x[2] - x[1]) == (y[2] - y[1]) * (x[1] - x[0])) {
-            System.out.println("X");
-            return;
+        for (int row = 0; row < rowSize ; row++) {
+            char[] inputCharOfCurrentRow = br.readLine().strip().toCharArray();
+            for (int column = 0 ; column < columnSize ; column++) {
+                charGrid[row][column] = inputCharOfCurrentRow[column];
+            }
         }
+        return charGrid;
+    }
 
-        long[] lenSq = new long[3];
-        lenSq[0] = getDistSq(x[0], y[0], x[1], y[1]);
-        lenSq[1] = getDistSq(x[1], y[1], x[2], y[2]);
-        lenSq[2] = getDistSq(x[2], y[2], x[0], y[0]);
+    private static void decideAndWriteOutput(int[] travelTimes) {
+        int maxTime = Arrays.stream(travelTimes).max().orElse(0);
+        int maxDirection = -1;
 
-        Arrays.sort(lenSq);
-        long a = lenSq[0];
-        long b = lenSq[1];
-        long c = lenSq[2]; // 가장 긴 변
+        for (int dir = 0 ; dir < 4; dir++) {
+            if (maxTime != travelTimes[dir]) continue;
+            maxDirection = dir;
+            break;
+        }
+        System.out.println(convertNumberToDirection(maxDirection));
+        System.out.println((maxTime == Integer.MAX_VALUE) ? "Voyager" : maxTime);
+    }
 
-        if (a == c) { // a==b && b==c 와 동일
-            System.out.println("JungTriangle");
-        } else if (a == b || b == c) { // 이등변삼각형 (정삼각형 아님은 위에서 걸러짐)
-            if (c > a + b) System.out.println("Dunkak2Triangle"); // 둔각
-            else if (c == a + b) System.out.println("Jikkak2Triangle"); // 직각
-            else System.out.println("Yeahkak2Triangle"); // 예각
-        } else { // 일반 삼각형 (세 변 다름)
-            if (c > a + b) System.out.println("DunkakTriangle");
-            else if (c == a + b) System.out.println("JikkakTriangle");
-            else System.out.println("YeahkakTriangle");
+    private static char convertNumberToDirection(int dirNumber) {
+        switch ( dirNumber ) {
+            case 0 :
+                return 'U';
+            case 1 :
+                return 'R';
+            case 2 :
+                return 'D';
+            default :
+                return 'L';
         }
     }
 
-    private static long getDistSq(long x1, long y1, long x2, long y2) {
-        return (x1 - x2) * (x1 - x2) + (y1 - y2) * (y1 - y2);
+    private static int simulateByDirection(
+            int voyagerRow, int voyagerColumn,
+            int rowSize, int columnSize,
+            int direction,
+            char[][] grid) {
+        int time = 0;
+        boolean[][][] visitedPositionDirection = new boolean[4][rowSize][columnSize];
+
+        int currentRow = voyagerRow;
+        int currentColumn = voyagerColumn;
+        int currentDirection = direction;
+        // u r d l
+        int[] diffR = new int[]{-1, 0, 1, 0};
+        int[] diffC = new int[]{0, 1, 0, -1};
+
+        while (true) {
+            // 종료조건은 1) isOutofBounds
+            currentRow += diffR[currentDirection];
+            currentColumn += diffC[currentDirection];
+            time += 1;
+
+            if (isOutOfBounds(currentRow, currentColumn, rowSize, columnSize)) return time;
+
+            if (grid[currentRow][currentColumn] == '\\') {
+                if (visitedPositionDirection[currentDirection][currentRow][currentColumn]) {
+                    return Integer.MAX_VALUE;
+                }
+                visitedPositionDirection[currentDirection][currentRow][currentColumn] = true;
+                currentDirection = reflectDirection(true, currentDirection);
+            } else if (grid[currentRow][currentColumn] == '/') {
+                if (visitedPositionDirection[currentDirection][currentRow][currentColumn]) {
+                    return Integer.MAX_VALUE;
+                }
+                visitedPositionDirection[currentDirection][currentRow][currentColumn] = true;
+                currentDirection = reflectDirection(false, currentDirection);
+            } else if (grid[currentRow][currentColumn] == 'C') {
+                return time;
+            }
+        }
     }
+
+    private static boolean isOutOfBounds(int currentRow, int currentColumn, int rowSize, int columnSize) {
+        return currentRow < 0 || currentRow >= rowSize || currentColumn < 0 || currentColumn >= columnSize;
+    }
+
+    // \ 의 경우, 1과 2 사이의 스왑, 0과 3사이의 스왑
+    // / 의 경우, 0과 1사이의 스왑, 2와 3사이의 스왑
+    private static int reflectDirection(boolean isReverseSlash, int currentDirection) {
+        if (isReverseSlash) {
+            switch (currentDirection) {
+                case 1 :
+                    return 2;
+                case 2 :
+                    return 1;
+                case 0 :
+                    return 3;
+                default :
+                    return 0;
+            }
+        } else {
+            switch (currentDirection) {
+                case 0 :
+                    return 1;
+                case 1 :
+                    return 0;
+                case 2 :
+                    return 3;
+                default :
+                    return 2;
+            }
+        }
+    }
+
 }

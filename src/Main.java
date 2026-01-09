@@ -2,78 +2,62 @@ import java.io.*;
 import java.util.*;
 
 public class Main {
-    // https://www.acmicpc.net/problem/1214
-    // 쿨한 물건 구매
+    // https://www.acmicpc.net/problem/26163
+    // 문제 출제
+
+    static int LENGTH = 5;
+
+
 
     public static void main(String[] args) throws IOException {
         BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
-
-        // D, P, Q를 받아낼 것
         StringTokenizer st = new StringTokenizer(br.readLine().strip());
 
-        long originTargetPrice = Long.parseLong(st.nextToken());
-        long billA = Long.parseLong(st.nextToken());
-        long billB = Long.parseLong(st.nextToken());
+        int[] scores = new int[LENGTH];
 
-        // P, Q에 대해 최대공약수를 구할 것 - 유클리드 호제법
-        long gcdVal = euclidean(billA, billB);
-
-        // P, Q를 최대공약수 g 에 대해 다시 표현할 것
-        long unitA = billA / gcdVal;
-        long unitB = billB / gcdVal;
-
-        long reducedTarget = (long) Math.ceil((double) originTargetPrice / gcdVal);
-
-        // 표현이 불가능한 가장 큰 수의 프로베니우스
-        long frobeniusLimit = calculateMaxInexpressible(unitA, unitB);
-
-        long bestReducedAnswer = 0;
-
-        // 케이스 분리
-        if (reducedTarget > frobeniusLimit) {
-            bestReducedAnswer = reducedTarget * gcdVal;
-        } else {
-            if (unitA > unitB) {
-                long temp = unitA;
-                unitA = unitB;
-                unitB = temp;
-            }
-
-            bestReducedAnswer = Long.MAX_VALUE;
-
-            long limit = Math.min((reducedTarget/unitB + 1), unitA);
-
-            for (long i = reducedTarget / unitB + 1 ; i >= 0 ; i--) {
-                long currentSum = i * unitB;
-
-                long remainder = reducedTarget - currentSum;
-                if (remainder > 0) {
-                    long smallerCount = (long) Math.ceil((double) remainder / unitA);
-                    currentSum += smallerCount * unitA;
-                }
-
-                if (currentSum < bestReducedAnswer) bestReducedAnswer = currentSum;
-                if (bestReducedAnswer == reducedTarget) break;
-                limit --;
-                if (limit < 0) break;
-            }
-
-            bestReducedAnswer = bestReducedAnswer * gcdVal;
+        for (int i = 0 ; i < LENGTH; i++) {
+            scores[i] = Integer.parseInt(st.nextToken());
         }
-        // wantToBuyPrice가 maxInexpressible 보다 크다면
+        int maxBill = 0;
 
-        // maxInexpressible 보다 작거나 같다면
-        // min(p,q)에 대해서 ceil로 값을 구함
+        for (int first = 0 ; first <= 15 ; first ++) {
+            for (int second = 0 ; second <= 15 ; second ++) {
+                for (int third = 0 ; third <= 15 ; third ++) {
+                    for (int fourth = 0 ; fourth <= 15 ; fourth ++) {
+                        for (int fifth = 0 ; fifth <= 15 ; fifth ++) {
+                            if (isCountable(first, second, third, fourth, fifth)) {
+                                maxBill = Math.max(maxBill,
+                                                   calculateBill(first, second, third, fourth, fifth, scores)
+                                                   );
+                            }
+                        }
+                    }
+                }
+            }
+        }
 
-        System.out.println(bestReducedAnswer);
+        System.out.println(maxBill);
     }
 
-    private static long euclidean(long a, long b) {
-        if (b == 0) return a;
-        return euclidean(b, a % b);
+    private static boolean isCountable(int first, int second, int third, int fourth, int fifth) {
+        int ruleBasedScore = calculateScoreRule(first, second, third, fourth, fifth);
+        if (first + second + third + fourth + fifth <= 3) {
+            return ( ruleBasedScore <= 10);
+        } else {
+            return ruleBasedScore <= 15;
+        }
     }
 
-    private static long calculateMaxInexpressible(long a, long b) {
-        return (a * b - a - b);
+    private static int calculateScoreRule(int first, int second, int third, int fourth, int fifth) {
+        return first + 2 * second + 3 * third + 4 * fourth + 5 * fifth;
     }
+
+    private static int calculateBill(int first, int second, int third, int fourth, int fifth, int[] scores) {
+        return first * scores[0]
+                + second * scores[1]
+                + third * scores[2]
+                + fourth * scores[3]
+                + fifth * scores[4];
+    }
+
 }

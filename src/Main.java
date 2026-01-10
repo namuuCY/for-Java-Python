@@ -2,89 +2,191 @@ import java.io.*;
 import java.util.*;
 
 public class Main {
-    // https://www.acmicpc.net/problem/2243
-    // 사탕 상자
+    // https://www.acmicpc.net/problem/5719
+    // 거의 최단 경로
 
-    // 1 B     : 꺼낼 사탕의 순위 (쿼리)
-    // 2 B 양수 : 맛 B 를 양수개 만큼 넣는다
-    // 2 B 음수 : 맛 B 를 음수개 만큼 뺀다
+    static int INF = Integer.MAX_VALUE;
 
-    // 맨 처음에는 빈 사탕상자에서 시작한다고 가정하며,
-    // 사탕의 총 개수는 2,000,000,000을 넘지 않는다. 또한 없는 사탕을 꺼내는 경우와 같은 잘못된 입력은 주어지지 않는다.
-    // 문제는 앞에서 몇번째여야 하는가? 쿼리를 어떻게 넣을건가?
-    // 앞에서 N번째를 어떻게 확인하냐? 앞에서 4번째라고 한다면
-    // 아 이걸 이분탐색으로 하나?
+    static class Node implements Comparable<Node> {
+        int nodeIdx;
+        int cost;
 
-    static int MAX_CANDY_COUNT = 1_000_002;
+        Node(int nodeIdx, int cost) {
+            this.nodeIdx = nodeIdx;
+            this.cost = cost;
+        }
+
+        public int compareTo(Node that) {
+            return this.cost - that.cost;
+        }
+    }
 
     public static void main(String[] args) throws IOException {
-        BufferedReader br = new BufferedReader( new InputStreamReader( System.in ) );
-
-        int queryCount = Integer.parseInt(br.readLine().strip());
-        int treeHeight = (int) Math.ceil(Math.log(MAX_CANDY_COUNT) / Math.log(2)) + 1;
-        int treeSize = (1 << treeHeight);
-
-        int[] segmentTree = new int[treeSize];
+        BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
 
         StringTokenizer st;
         StringBuilder sb = new StringBuilder();
-
-        while (queryCount -- > 0) {
+        while (true) {
             st = new StringTokenizer(br.readLine());
-            String command = st.nextToken();
+            int vertexSize = Integer.parseInt(st.nextToken());
+            int edgeSize = Integer.parseInt(st.nextToken());
+            if (isTerminateCondition(vertexSize, edgeSize)) break;
 
-            if ("2".equals(command)) {
-                int targetCandyIdx = Integer.parseInt(st.nextToken()) - 1;
-                int diffVal = Integer.parseInt(st.nextToken());
+            st = new StringTokenizer(br.readLine());
+            int startNode = Integer.parseInt(st.nextToken());
+            int endNode = Integer.parseInt(st.nextToken());
 
-                updateTree(segmentTree, 1, targetCandyIdx, diffVal, 0, MAX_CANDY_COUNT);
-            } else {
-                int targetCandyOrder = Integer.parseInt(st.nextToken());
-                int indexOfAnswer = binarySearch(segmentTree, targetCandyOrder);
-                updateTree(segmentTree, 1, indexOfAnswer, -1, 0, MAX_CANDY_COUNT);
+            List<Node>[] nodes = initGraph( br, vertexSize, edgeSize);
 
-                sb.append(indexOfAnswer + 1);
-                sb.append("\n");
-            }
+            boolean[][] isRemoved = runDijkstraAndRemoveLeastPaths(vertexSize, startNode, endNode, nodes);
+
+            int ans = runDijkstraWithRemoveLeastPaths(vertexSize, startNode, endNode, nodes, isRemoved);
+            sb.append(
+                    (ans == INF) ? -1 : ans
+            );
+            sb.append("\n");
         }
 
         System.out.println(sb);
     }
 
-    private static void updateTree(int[] tree, int nodeIdx, int targetIdx, int diffVal, int start, int end) {
-        if (start == end) {
-            if (start == targetIdx) tree[nodeIdx] += diffVal;
-            return;
+    private static boolean isTerminateCondition(int input1, int input2) {
+        return input1 == 0 && input2 == 0;
+    }
+
+    private static List<Node>[] initGraph(BufferedReader br, int vertexSize, int edgeSize) throws IOException {
+        List<Node>[] graph = new ArrayList[vertexSize];
+
+        for (int i = 0 ; i < vertexSize; i++) {
+            graph[i] = new ArrayList<>();
         }
-        if (targetIdx < start || end < targetIdx) return;
-        updateTree(tree, nodeIdx * 2, targetIdx, diffVal, start, (start + end) / 2 );
-        updateTree(tree, nodeIdx * 2 + 1, targetIdx, diffVal, (start + end) / 2 + 1, end);
-        tree[nodeIdx] = tree[nodeIdx * 2] + tree[nodeIdx * 2 + 1];
+        StringTokenizer st;
+        while (edgeSize -- > 0) {
+             st = new StringTokenizer(br.readLine());
+             int startNode = Integer.parseInt(st.nextToken());
+             Node edge = new Node(
+                     Integer.parseInt(st.nextToken()),
+                     Integer.parseInt(st.nextToken())
+             );
+             graph[startNode].add(edge);
+        }
+
+        return graph;
     }
 
-    private static int query(int[] tree, int nodeIdx, int left, int right, int start, int end) {
-        if (right < start || end < left) return 0;
-        if (left <= start && end <= right) return tree[nodeIdx];
-        int leftCount = query(tree, nodeIdx * 2, left, right, start, (start + end) / 2);
-        int rightCount = query(tree, nodeIdx * 2 + 1, left, right, (start + end) / 2 + 1, end);
-        return leftCount + rightCount;
-    }
+    private static boolean[][] runDijkstraAndRemoveLeastPaths(
+            int vertexSize,
+            int startNode,
+            int endNode,
+            List<Node>[] graph) {
+        // 다익스트라 수행하면서 최단경로면 마킹해야함.
+        int[] distances = new int[vertexSize];
+        Arrays.fill(distances, INF);
+        PriorityQueue<Node> pq = new PriorityQueue<>();
+        distances[startNode] = 0;
 
-    private static int binarySearch(int[] tree, int targetOrder) {
-        int start = 0;
-        int end = MAX_CANDY_COUNT;
-        int ans = 0;
-        while (start <= end) {
-            int midIdx = (start + end) / 2;
-            int queriedOrder = query(tree, 1, 0, midIdx, 0, MAX_CANDY_COUNT);
-            if (queriedOrder >= targetOrder) {
-                ans = midIdx;
-                end = midIdx - 1;
-            } else {
-                start = midIdx + 1;
+        List<Integer>[] forTrace = new ArrayList[vertexSize];
+        for (int i = 0 ; i < vertexSize ; i++) {
+            forTrace[i] = new ArrayList<>();
+        }
+        pq.add(new Node(startNode, 0));
+
+        while (!pq.isEmpty()) {
+            Node currentNode = pq.poll();
+            int currentNodeIdx = currentNode.nodeIdx;
+
+            if (currentNode.cost > distances[currentNodeIdx]) continue;
+
+            for (Node nextNode : graph[currentNodeIdx]) {
+                int nextDistance = distances[nextNode.nodeIdx];
+                int newDistance = distances[currentNodeIdx] + nextNode.cost;
+
+                if (nextDistance > newDistance) {
+                    forTrace[nextNode.nodeIdx].clear();
+                    forTrace[nextNode.nodeIdx].add(currentNodeIdx);
+                    distances[nextNode.nodeIdx] = newDistance;
+                    pq.add(new Node(nextNode.nodeIdx, newDistance));
+                } else if (nextDistance == newDistance) {
+                    forTrace[nextNode.nodeIdx].add(currentNodeIdx);
+                }
             }
         }
-        return ans;
+
+        return removeLeastPathsByBFS(forTrace, endNode, vertexSize);
     }
+
+    private static boolean[][] removeLeastPathsByBFS(List<Integer>[] forTrace, int endNode, int vertexSize) {
+        Queue<Integer> q = new ArrayDeque<>();
+        boolean[] visited = new boolean[vertexSize];
+        boolean[][] isRemoved = new boolean[vertexSize][vertexSize];
+
+        q.add(endNode);
+        visited[endNode] = true;
+
+        while (!q.isEmpty()) {
+            int childNode = q.poll();
+
+            for (int parentNode : forTrace[childNode]) {
+
+                isRemoved[parentNode][childNode] = true;
+                if (!visited[parentNode]) {
+                    visited[parentNode] = true;
+                    q.add(parentNode);
+                }
+
+            }
+        }
+
+        return isRemoved;
+    }
+
+    // 아래는 기존에 잘못된 로직
+//    while (!q.isEmpty()) {
+//        int currentNode = q.poll();
+//
+//        for (int nextNode : forTrace[currentNode]) {
+//            if (visited[nextNode]) continue;
+//            isRemoved[nextNode][currentNode] = true;
+//            q.add(nextNode);
+//        }
+//    }
+
+    private static int runDijkstraWithRemoveLeastPaths(
+            int vertexSize,
+            int startNode,
+            int endNode,
+            List<Node>[] graph,
+            boolean[][] isRemoved
+            ) {
+
+        int[] distances = new int[vertexSize];
+        Arrays.fill(distances, INF);
+        PriorityQueue<Node> pq = new PriorityQueue<>();
+        distances[startNode] = 0;
+
+        pq.add(new Node(startNode, 0));
+
+        while (!pq.isEmpty()) {
+            Node currentNode = pq.poll();
+            int currentNodeIdx = currentNode.nodeIdx;
+
+            if (currentNode.cost > distances[currentNodeIdx]) continue;
+
+            for (Node nextNode : graph[currentNodeIdx]) {
+                if (isRemoved[currentNodeIdx][nextNode.nodeIdx]) continue;
+
+                int nextDistance = distances[nextNode.nodeIdx];
+                int newDistance = distances[currentNodeIdx] + nextNode.cost;
+
+                if (nextDistance > newDistance) {
+                    distances[nextNode.nodeIdx] = newDistance;
+                    pq.add(new Node(nextNode.nodeIdx, newDistance));
+                }
+            }
+        }
+
+        return distances[endNode];
+    }
+
 
 }

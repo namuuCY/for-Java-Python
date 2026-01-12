@@ -12,56 +12,71 @@ public class Main {
     // 밑에서부터 채울거지? 어떻게 채울거야
     // 우선 1부터 채움.
 
-
-    static class Transaction {
-        int currentPrice;
-        int transactionCount;
-
-        Transaction(int currentPrice, int transactionCount) {
-            this.currentPrice = currentPrice;
-            this.transactionCount = transactionCount;
-        }
-
-        Transaction compareAndUpsert() {
-
-        }
-    }
-
+    static int MAX_PRICE;
 
     public static void main(String[] args) throws IOException {
         BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
 
         int traderSize = Integer.parseInt(br.readLine());
         int[][] expectedPrice = parseInput(traderSize, br);
+        int[][][] DP = new int[MAX_PRICE][traderSize][(1 << traderSize)];
+        dynamicProgramming(traderSize, expectedPrice, DP);
 
-        int[][] DP = new int[traderSize][(1 << traderSize)];
+        int ans = 0 ;
+        for (int i = 0 ; i < MAX_PRICE ; i++) {
+            for (int j = 0 ; j < traderSize ; j ++) {
+                for (int k = 0 ; k < (1 << traderSize) ; k++) {
+                    if (ans >= DP[i][j][k]) continue;
+                    ans = DP[i][j][k];
+                }
+            }
+        }
 
+        System.out.println(ans);
     }
 
     private static int[][] parseInput(int traderSize, BufferedReader br) throws IOException {
+        int ans = 0;
 
         int[][] expectedPrice = new int[traderSize][traderSize];
         for (int row = 0 ; row < traderSize ; row++) {
             char[] currentInputChars = br.readLine().strip().toCharArray();
             for (int column = 0 ; column < traderSize ; column ++) {
-                expectedPrice[row][column] = (char) currentInputChars[column] - (char) '0';
+                int currentPrice = (char) currentInputChars[column] - (char) '0';
+                expectedPrice[row][column] = currentPrice;
+                if (ans < currentPrice) {
+                    ans = currentPrice;
+                }
             }
         }
-
+        MAX_PRICE = ans + 1;
         return expectedPrice;
     }
 
-    private static void updateDp(int traderSize, int[][] expectedPrice, int[][] DP) {
-        DP[0][1] = 1;
+    private static void dynamicProgramming(int traderSize, int[][] expectedPrice, int[][][] DP) {
+        DP[0][0][1] = 1;
 
-        for (int currentTraderBitmask = 1 ; currentTraderBitmask < (1 << traderSize) ; currentTraderBitmask ++) {
-            for (int nextTrader = 1; nextTrader < traderSize ; nextTrader++) {
-                // 현재 비트마스크 기반으로 방문하지 않은애들에 대해서 스타트
-                if (( (currentTraderBitmask >> nextTrader) & 1 ) == 1) continue;
-                // 가격 비교 후 업데이트 X 조건일 경우 생각
+        for (int accumulateBitmask = 1 ; accumulateBitmask < (1 << traderSize) ; accumulateBitmask ++) {
+            for (int currentTrader = 0; currentTrader < traderSize ; currentTrader ++) {
+                if (( (accumulateBitmask >> currentTrader) & 1 ) != 1) continue;
 
-                // 업데이트 시에는 무조건 Math.max를 통해서 비교해야함.
-                // 만약 같은데, 기존 프라이스보다 낮은 케이스
+                for (int currentPrice = 0; currentPrice < MAX_PRICE; currentPrice ++) {
+                    if (DP[currentPrice][currentTrader][accumulateBitmask] == 0) continue;
+                    int currentLoopCondition = DP[currentPrice][currentTrader][accumulateBitmask];
+
+                    for (int nextTrader = 1; nextTrader < traderSize ; nextTrader++) {
+                        if (( (accumulateBitmask >> nextTrader) & 1 ) == 1) continue;
+                        int transactionPrice = expectedPrice[currentTrader][nextTrader];
+                        if (transactionPrice >= currentPrice) {
+                            int nextBitmask = accumulateBitmask | (1 << nextTrader);
+                            DP[transactionPrice][nextTrader][nextBitmask] =
+                                    Math.max(
+                                            DP[transactionPrice][nextTrader][nextBitmask],
+                                            currentLoopCondition +1
+                                    );
+                        }
+                    }
+                }
             }
         }
     }

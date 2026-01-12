@@ -1,16 +1,13 @@
 import java.io.*;
+import java.util.Arrays;
 
 public class Main {
     // https://www.acmicpc.net/problem/1029
     // 그림 교환
 
-    // DFS, BFS는 불가능할것 -> N! - 14! 하면 10억초과
-    // 그리디 접근 방법? 케이스가 많아서 불가능해보임
-    // 플로이드 - 워셜? 얘네는 최단 경로를 출력하므로 불가능해보임
-    // 비트마스킹까진 생각났는데... 2^15 = 32000 라 가능해보이고
-    // DP[마지막 구매자][여태까지 총 구매자 비트마스킹] 15 * (2 ^ 15) = 50만정도?
-    // 밑에서부터 채울거지? 어떻게 채울거야
-    // 우선 1부터 채움.
+    // 방법 2)
+    // DP[마지막 방문자][방문한 사람 비트마스킹] = 최소 가격
+
 
     static int MAX_PRICE;
 
@@ -19,18 +16,22 @@ public class Main {
 
         int traderSize = Integer.parseInt(br.readLine());
         int[][] expectedPrice = parseInput(traderSize, br);
-        int[][][] DP = new int[MAX_PRICE][traderSize][(1 << traderSize)];
+        int[][] DP = new int[traderSize][(1 << traderSize)];
+        for (int i = 0; i < traderSize; i++) {
+            Arrays.fill( DP[i], 10);
+        }
         dynamicProgramming(traderSize, expectedPrice, DP);
 
         int ans = 0 ;
-        for (int i = 0 ; i < MAX_PRICE ; i++) {
-            for (int j = 0 ; j < traderSize ; j ++) {
-                for (int k = 0 ; k < (1 << traderSize) ; k++) {
-                    if (ans >= DP[i][j][k]) continue;
-                    ans = DP[i][j][k];
-                }
+        for (int j = 0 ; j < traderSize ; j ++) {
+            for (int k = 1 ; k < (1 << traderSize) ; k++) {
+                if (DP[j][k] >= 10) continue;
+                int currentTraders = Integer.bitCount(k);
+                if (ans >= currentTraders) continue;
+                ans = currentTraders;
             }
         }
+
 
         System.out.println(ans);
     }
@@ -53,27 +54,23 @@ public class Main {
         return expectedPrice;
     }
 
-    private static void dynamicProgramming(int traderSize, int[][] expectedPrice, int[][][] DP) {
-        DP[0][0][1] = 1;
+    private static void dynamicProgramming(int traderSize, int[][] expectedPrice, int[][] DP) {
+        DP[0][1] = 0;
 
         for (int accumulateBitmask = 1 ; accumulateBitmask < (1 << traderSize) ; accumulateBitmask ++) {
-            for (int currentTrader = 0; currentTrader < traderSize ; currentTrader ++) {
-                if (( (accumulateBitmask >> currentTrader) & 1 ) != 1) continue;
+            for (int currentTrader = 0 ; currentTrader < traderSize ; currentTrader ++) {
+                if (DP[currentTrader][accumulateBitmask] >= 10) continue;
+                int currentPrice = DP[currentTrader][accumulateBitmask];
 
-                for (int currentPrice = 0; currentPrice < MAX_PRICE; currentPrice ++) {
-                    if (DP[currentPrice][currentTrader][accumulateBitmask] == 0) continue;
-                    int currentLoopCondition = DP[currentPrice][currentTrader][accumulateBitmask];
+                for (int nextTrader = 1; nextTrader < traderSize ; nextTrader ++) {
+                    if ((accumulateBitmask & (1 << nextTrader)) != 0) continue;
 
-                    for (int nextTrader = 1; nextTrader < traderSize ; nextTrader++) {
-                        if (( (accumulateBitmask >> nextTrader) & 1 ) == 1) continue;
-                        int transactionPrice = expectedPrice[currentTrader][nextTrader];
-                        if (transactionPrice >= currentPrice) {
-                            int nextBitmask = accumulateBitmask | (1 << nextTrader);
-                            DP[transactionPrice][nextTrader][nextBitmask] =
-                                    Math.max(
-                                            DP[transactionPrice][nextTrader][nextBitmask],
-                                            currentLoopCondition +1
-                                    );
+                    int nextPrice = expectedPrice[currentTrader][nextTrader];
+                    if (nextPrice >= currentPrice) {
+                        int nextMask = accumulateBitmask | (1 << nextTrader);
+
+                        if (DP[nextTrader][nextMask] > nextPrice) {
+                            DP[nextTrader][nextMask] = nextPrice;
                         }
                     }
                 }

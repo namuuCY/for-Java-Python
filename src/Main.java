@@ -1,140 +1,116 @@
 import java.io.*;
-import java.util.*;
 import java.util.StringTokenizer;
-import java.util.stream.Collectors;
 
 public class Main {
-    // https://www.acmicpc.net/problem/2610
-    // 회의 준비
+    // https://www.acmicpc.net/problem/1168
+    // 요세푸스 문제 2
 
-    // 1 4
-    // 2 3
-    // disjoint Set으로 구성하고, <- 순환 있어서 안된다...? 아님 중복이면 안하면 된다
-    // set 별로 플로이드 돌리고
-    // 최단거리 구하면 되지 않나?
-    // 최단거리는 상태를 모르지 않나??
-    // 대표 중, 가장 적은 사람을 거치는 경로로 의견을 전달
-    // 맞네 플로이드다
+    // - 세그먼트 트리의 리프노드를 전부 다 1로 초기화
+    //- 각각의 트리에는 구간별로 총 몇명의 병사가 있는지를 확인
+    //- t번째 병사를 찾는 try 에서 일어나는 일
+    //- t번째 병사를 찾음 -> 해당 병사의 리프노드를 0으로, 트리를 업데이트
+    //- 현재 남아있는 병사는 count로 확인가능
+    //- case1) (count 가 k보다 클때는 아래와 같은 방식을 적용)
+    //- 현재 t번째 병사의 왼쪽구간, 오른쪽 구간을 나누어서
+    //- 오른쪽 구간의 병사 수를 확인, t보다 작다면 이분탐색으로 몇번째에 있는지를 확인
+    //- 왼쪽 구간의 병사 수를 확인 k+1 번째 병사를 찾음
+    //- case 2) (count 가 k보다 작을때는 아래와 같은 방식을 적용)
+    //- count module k 를 통해서 몇 번째 병사를 선택해야 하는지 확인
+    //- case 1)의 방식을 응용
+    static int N;
+    static int K;
 
     public static void main(String[] args) throws IOException {
         BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
 
-        int entryNumber = Integer.parseInt(br.readLine());
-        int edgeCount = Integer.parseInt(br.readLine());
+        StringTokenizer st = new StringTokenizer(br.readLine());
+        N = Integer.parseInt(st.nextToken());
+        K = Integer.parseInt(st.nextToken());
 
-        int[][] edges = inputProcess(br, entryNumber, edgeCount);
+        int[] segmentTree = initSegmentTree();
 
-        List<List<Integer>> groups = groupByDfs(edges, entryNumber);
         StringBuilder sb = new StringBuilder();
-        sb.append(groups.size());
-        groups.stream()
-                .map((group) -> leaderElectionByFloyd(group, edges))
-                .sorted()
-                .forEach(leader -> {
-                    sb.append("\n" + leader);
-                });
+        sb.append("<");
+        // 출력시 + 1 해주어야 한다.
+        int cursor = 0;
+        for (int i = N; i >= 1 ; i--) {
+            int targetNumber = (i >= K)
+                    ? K
+                    : (K % i == 0) ? i : K % i;
+            cursor = findSoldierIdxAndUpdateTree(segmentTree, cursor, targetNumber);
+            sb.append((cursor + 1));
+            if (i != 1) {
+                sb.append(", ");
+            }
+        }
+        sb.append(">");
 
         System.out.println(sb);
     }
 
-    private static int[][] inputProcess(BufferedReader br, int entryNumber, int edgeCount) throws IOException {
-        int[][] edges = new int[entryNumber][entryNumber];
-        StringTokenizer st;
-        while (edgeCount -- > 0) {
-            st = new StringTokenizer(br.readLine());
-            int startNode = Integer.parseInt(st.nextToken()) - 1;
-            int endNode = Integer.parseInt(st.nextToken()) - 1;
-            edges[startNode][endNode] = 1;
-            edges[endNode][startNode] = 1;
-        }
-        return edges;
+    private static int[] initSegmentTree() {
+        int treeSize = (1 << ((int) (Math.ceil(Math.log(N) / Math.log(2))) + 1));
+        int[] tree = new int[treeSize];
+        initInternal(tree, 1, 0, N - 1);
+        return tree;
     }
 
-    private static List<List<Integer>> groupByDfs(int[][] edges, int entryNumber) {
-        boolean[] visited = new boolean[entryNumber];
-
-        List<List<Integer>> groups = new ArrayList<>();
-
-        for (int i = 0; i < entryNumber ; i++) {
-            if (visited[i]) continue;
-            List<Integer> currentGroup = dfs(edges, i, entryNumber);
-            for (int idx : currentGroup) {
-                visited[idx] = true;
-            }
-            groups.add(currentGroup);
+    private static void initInternal(int[] tree, int nodeIdx, int start, int end) {
+        if (start == end) {
+            tree[nodeIdx] = 1;
+            return;
         }
-
-        return groups;
+        initInternal(tree, nodeIdx * 2, start, (start + end) / 2);
+        initInternal(tree, nodeIdx * 2 + 1, (start + end) / 2 + 1, end);
+        tree[nodeIdx] = tree[nodeIdx * 2] + tree[nodeIdx * 2 + 1];
     }
 
-    private static List<Integer> dfs(int[][] edges, int currentIdx, int entryNumber) {
-        List<Integer> entries = new ArrayList<>();
-        boolean[] visited = new boolean[entryNumber];
-        visited[currentIdx] = true;
-        entries.add(currentIdx);
-        Deque<Integer> Q = new ArrayDeque<>();
-        Q.add(currentIdx);
-
-        while (!Q.isEmpty()) {
-            int currentNode = Q.pop();
-            for (int nextNode = 0 ; nextNode < entryNumber ; nextNode++) {
-                if (edges[currentNode][nextNode] == 0) continue;
-                if (visited[nextNode]) continue;
-
-                visited[nextNode] = true;
-                if (!entries.contains(nextNode)) {
-                    entries.add(nextNode);
-                }
-                Q.add(nextNode);
+    private static void removeSoldierByUpdateTree(int[] tree, int nodeIdx, int targetIdx, int start, int end) {
+        if (start == end) {
+            if (start == targetIdx) {
+                tree[nodeIdx] = 0;
             }
+            return;
         }
-
-        return entries;
+        if (end < targetIdx || start > targetIdx) return;
+        removeSoldierByUpdateTree(tree, nodeIdx * 2, targetIdx, start, (start + end) / 2);
+        removeSoldierByUpdateTree(tree, nodeIdx * 2 + 1, targetIdx,  (start + end) / 2 + 1 , end);
+        tree[nodeIdx] = tree[nodeIdx * 2] + tree[nodeIdx * 2 + 1];
     }
 
-    // 대표 선발하는건 1명, 2명일때는 엣지케이스 두자.
-
-    private static int leaderElectionByFloyd(List<Integer> group, int[][] edges) {
-        int groupSize = group.size();
-        if (groupSize == 1 || groupSize == 2) {
-            return group.get(0) + 1;
+    private static int queryIndexing(int[] tree, int targetCount, int nodeIdx, int start, int end) {
+        if (start == end) return start;
+        int mid = (start + end) / 2;
+        // 왼쪽 먼저 계산 후, 넘는다고 판단되면
+        int leftSoldiers = tree[nodeIdx * 2];
+        if (targetCount <= leftSoldiers) {
+            return queryIndexing(tree, targetCount, nodeIdx * 2, start, mid);
+        } else {
+            return queryIndexing(tree, targetCount - leftSoldiers, nodeIdx * 2 + 1, mid + 1, end);
         }
-        // 플로이드 세팅
-        int[][] dist = new int[groupSize][groupSize];
-        for (int i = 0 ; i < groupSize ; i++ ) {
-            Arrays.fill(dist[i], 0x3f3f3f3f);
-            dist[i][i] = 0;
-            for (int j = 0 ; j < groupSize; j++) {
-                int edge = edges[group.get(i)][group.get(j)];
-                if (edge == 0) continue;
-                dist[i][j] = 1;
-            }
-        }
-        // 플로이드 돌림
-        for (int passingBy = 0 ; passingBy < groupSize; passingBy++ ) {
-            for (int startNode = 0; startNode < groupSize; startNode ++) {
-                for (int endNode = 0; endNode < groupSize; endNode ++) {
-                    if (dist[startNode][endNode] <= dist[startNode][passingBy] + dist[passingBy][endNode]) continue;
-                    dist[startNode][endNode] = dist[startNode][passingBy] + dist[passingBy][endNode];
-                }
-            }
-        }
-
-        // 결과 종합
-        int count = Integer.MAX_VALUE;
-        int leader = -1;
-        for (int i = 0 ; i < groupSize; i++) {
-            int maxDistForNodeI = 0;
-            for (int j = 0 ; j < groupSize; j++) {
-                if (i == j) continue;
-                maxDistForNodeI = Math.max(maxDistForNodeI, dist[i][j]);
-            }
-            if (count > maxDistForNodeI) {
-                count = maxDistForNodeI;
-                leader = group.get(i);
-            }
-        }
-
-        return leader + 1;
     }
+
+    private static int queryCount(int[] tree, int nodeIdx, int left, int right, int start, int end) {
+        if (right < start || end < left) return 0;
+        if (left <= start && end <= right) return tree[nodeIdx];
+        int mid = (start + end) / 2;
+        return queryCount(tree, nodeIdx * 2, left, right, start, mid)
+                + queryCount(tree, nodeIdx * 2 + 1, left, right, mid + 1, end);
+    }
+
+    private static int findSoldierIdxAndUpdateTree(int[] tree, int cursor, int targetCount) {
+        int rightSegmentSoldiers = queryCount(tree, 1, cursor, N - 1, 0, N - 1);
+        int leftSegmentSoldiers = tree[1] - rightSegmentSoldiers; // 왼쪽에 있는 생존 병력
+        if (rightSegmentSoldiers >= targetCount) {
+            int targetIdx = queryIndexing(tree, leftSegmentSoldiers + targetCount, 1, 0, N - 1);
+            removeSoldierByUpdateTree(tree, 1, targetIdx, 0, N-1);
+            return targetIdx;
+        }
+
+        int targetIdx = queryIndexing(tree, targetCount - rightSegmentSoldiers, 1, 0, N - 1);
+        removeSoldierByUpdateTree(tree, 1, targetIdx, 0, N - 1);
+
+        return targetIdx;
+    }
+
 }

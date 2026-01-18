@@ -1,62 +1,53 @@
 import java.io.*;
-import java.util.StringTokenizer;
+import java.util.*;
 
 public class Main {
-    // https://www.acmicpc.net/problem/2157
-    // 2157 여행
+    // https://www.acmicpc.net/problem/1034
+    // 램프
 
-    // 먹게되는 기내식 점수의 총합이 최대로
-    // 일반적인 다익스트라, 플로이드 -> 이동거리 "최소"를 기록
-    // M개 이하의 도시 지나야 함.
+    static int N, M, K;
 
-    // DP[총 다닌 도시][마지막에 경유한 도시]
-    // 1 1 에서 start
-    // 1 2
     public static void main(String[] args) throws IOException {
-        BufferedReader br = new BufferedReader( new InputStreamReader( System.in ) );
-        // 입력의 경우, 더 큰 값이 있으면 그것으로 갱신하는거 필요
+        BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
+
         StringTokenizer st = new StringTokenizer(br.readLine().strip());
-        int N = Integer.parseInt(st.nextToken());
-        int M = Integer.parseInt(st.nextToken());
-        int K = Integer.parseInt(st.nextToken());
+        N = Integer.parseInt(st.nextToken());
+        M = Integer.parseInt(st.nextToken());
+        Map<String, Integer> lamp = parseInput(br);
+        K = Integer.parseInt(br.readLine());
 
-        int[][] graph = parseInput(N, K, br);
-        int[][] DP = new int[M + 1][N + 1];
+        int ans = lamp.entrySet().stream()
+                .map((entry) -> calculatePossibility(entry, K))
+                .max(Integer::compareTo)
+                .orElse(0);
 
-        for (int cnt = 1; cnt < M; cnt++) {
-            for (int i = 1; i <= N; i++) {
-                if (cnt == 1 && i != 1) continue;
-                if (cnt != 1 && DP[cnt][i] == 0) continue;
-
-                for (int j = i + 1; j <= N; j++) {
-                    if (graph[i][j] > 0) {
-                        DP[cnt + 1][j] = Math.max(DP[cnt + 1][j], DP[cnt][i] + graph[i][j]);
-                    }
-                }
-            }
-        }
-
-        int maxScore = 0;
-        for (int i = 2; i <= M; i++) {
-            maxScore = Math.max(maxScore, DP[i][N]);
-        }
-
-        System.out.println(maxScore);
+        System.out.println(ans);
     }
 
-    private static int[][] parseInput(int vertexSize, int queries, BufferedReader br) throws IOException {
-        StringTokenizer st;
-        int[][] graph = new int[vertexSize + 1][vertexSize + 1];
-        while (queries -- > 0) {
-            st = new StringTokenizer(br.readLine());
-            int start = Integer.parseInt(st.nextToken());
-            int end = Integer.parseInt(st.nextToken());
-            int score = Integer.parseInt(st.nextToken());
+    private static Map<String, Integer> parseInput(BufferedReader br) throws IOException {
+        Map<String, Integer> digitCounts = new HashMap<>();
+        for (int i = 0 ; i < N; i++) {
+            String originString = br.readLine().strip();
+            digitCounts.merge(originString, 1, Integer::sum);
+        }
+        return digitCounts;
+    }
 
-            if (start >= end) continue;
-            graph[start][end] = Math.max(graph[start][end], score);
+    private static Integer calculatePossibility(Map.Entry<String, Integer> entry, int K) {
+        char[] stringToCharArr = entry.getKey().toCharArray();
+        // 먼저, 필요한 숫자를 셈
+        int needToPossible = 0;
+        for (char c : stringToCharArr) {
+            if (c == '0') needToPossible++;
         }
 
-        return graph;
+        if (needToPossible > K) return 0;
+        return (needToPossible - K) % 2 == 0
+                ? entry.getValue()
+                : 0;
     }
+
+
+
+
 }

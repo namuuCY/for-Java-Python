@@ -2,47 +2,77 @@ import java.io.*;
 import java.util.*;
 
 public class Main {
-    private static int ceilDiv(int a, int b) {
-        return (a + b - 1) / b;
-    }
+    // https://www.acmicpc.net/problem/14658
+    // 하늘에서 별똥별이 빗발친다
+
+    // 최대한 많은 별똥별 튕겨나가는 개수
+    // 위치 좌표 주어질때, x, y 값 기준으로 해서 그 범위 안에 있으면?
+    // L이 10만이면 10만안에 그 숫자가 있는지 확인하는 것도 오래걸림.
+
+    // 에를 들어 꼭지점 빼고 변두리에만 다 있을 경우라던가 존재하니까 꼭지점이 되어야 한다는 판단 X
+
+    // 100 개의 좌표에 대해서 x 차이 y차이를 기록해보면?
+    // 모든 나올 수 있는 사각형 만들고 (변 길이가 L 초과로 차이나면 제외?)
+    // x, y 후보는 모든 점 ?
+
+    static int N, M, L, K;
 
     public static void main(String[] args) throws Exception {
         BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
-        StringTokenizer st = new StringTokenizer(br.readLine());
 
-        int N = Integer.parseInt(st.nextToken());
-        int K = Integer.parseInt(st.nextToken());
+        StringTokenizer st = new StringTokenizer(br.readLine().strip());
+        N = Integer.parseInt(st.nextToken());
+        M = Integer.parseInt(st.nextToken());
+        L = Integer.parseInt(st.nextToken());
+        K = Integer.parseInt(st.nextToken());
 
-        // 그룹 카운트
-        int g12 = 0;      // 1~2 전체
-        int g34F = 0;     // 3~4 여
-        int g34M = 0;     // 3~4 남
-        int g56F = 0;     // 5~6 여
-        int g56M = 0;     // 5~6 남
+        int[][] meteors = parseInput(br);
 
-        for (int i = 0; i < N; i++) {
-            st = new StringTokenizer(br.readLine());
-            int S = Integer.parseInt(st.nextToken()); // 0:여, 1:남
-            int Y = Integer.parseInt(st.nextToken()); // 1~6
+        int maxMeteors = 0;
 
-            if (Y == 1 || Y == 2) {
-                g12++;
-            } else if (Y == 3 || Y == 4) {
-                if (S == 0) g34F++;
-                else g34M++;
-            } else { // Y == 5 || Y == 6
-                if (S == 0) g56F++;
-                else g56M++;
+        for (int i = 0 ; i < K; i++) {
+            for (int j = 0 ; j < K; j++) {
+                int currentX = meteors[i][0];
+                int currentY = meteors[j][1];
+
+                int currentMeteors = countMeteors(currentX, currentY, meteors);
+                maxMeteors = Math.max(currentMeteors, maxMeteors);
+                if (maxMeteors == K) {
+                    System.out.println(0);
+                    return;
+                }
             }
         }
 
-        int ans = 0;
-        ans += ceilDiv(g12, K);
-        ans += ceilDiv(g34F, K);
-        ans += ceilDiv(g34M, K);
-        ans += ceilDiv(g56F, K);
-        ans += ceilDiv(g56M, K);
+        System.out.println(K - maxMeteors);
+    }
 
-        System.out.println(ans);
+    private static int[][] parseInput(BufferedReader br) throws IOException {
+        int[][] vertexes = new int[K][2];
+        StringTokenizer st;
+        for (int i = 0 ; i < K; i++) {
+            st = new StringTokenizer(br.readLine());
+            vertexes[i][0] = Integer.parseInt(st.nextToken());
+            vertexes[i][1] = Integer.parseInt(st.nextToken());
+        }
+        return vertexes;
+    }
+
+    private static int countMeteors(int vertexX, int vertexY, int[][] meteors) {
+        int currentMeteors = 0;
+
+        for (int i = 0 ; i < K; i++) {
+            int meteorX = meteors[i][0];
+            int meteorY = meteors[i][1];
+
+            if (vertexX > meteorX) continue;
+            if (meteorX > vertexX + L) continue;
+            if (vertexY > meteorY) continue;
+            if (meteorY > vertexY + L) continue;
+
+            currentMeteors ++;
+        }
+
+        return currentMeteors;
     }
 }

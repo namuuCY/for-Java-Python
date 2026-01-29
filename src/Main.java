@@ -3,76 +3,96 @@ import java.util.*;
 import java.util.function.BiFunction;
 
 public class Main {
-    // https://www.acmicpc.net/problem/1707
+    // https://www.acmicpc.net/problem/1939
     //
 
 
-    static ArrayList<Integer>[] adj; // 인접 리스트
-    static int[] colors; // 정점의 색 (0: 미방문, 1: 빨강, -1: 파랑)
-    static boolean isBipartite; // 이분 그래프 여부 저장
+    static class Node {
+        int to;
+        int weight;
+
+        public Node(int to, int weight) {
+            this.to = to;
+            this.weight = weight;
+        }
+    }
+
+    static int N, M;
+    static ArrayList<Node>[] adj;
+    static boolean[] visited;
+    static int startFactory, endFactory;
 
     public static void main(String[] args) throws IOException {
         BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
-        StringBuilder sb = new StringBuilder();
+        StringTokenizer st = new StringTokenizer(br.readLine());
 
-        // 테스트 케이스 개수 K
-        int K = Integer.parseInt(br.readLine());
+        N = Integer.parseInt(st.nextToken());
+        M = Integer.parseInt(st.nextToken());
 
-        while (K-- > 0) {
-            StringTokenizer st = new StringTokenizer(br.readLine());
-            int V = Integer.parseInt(st.nextToken()); // 정점 개수
-            int E = Integer.parseInt(st.nextToken()); // 간선 개수
-
-            // 그래프 초기화 (1번 정점부터 사용)
-            adj = new ArrayList[V + 1];
-            for (int i = 1; i <= V; i++) {
-                adj[i] = new ArrayList<>();
-            }
-
-            colors = new int[V + 1]; // 0으로 자동 초기화
-            isBipartite = true; // 기본적으로 true로 가정
-
-            // 간선 입력
-            for (int i = 0; i < E; i++) {
-                st = new StringTokenizer(br.readLine());
-                int u = Integer.parseInt(st.nextToken());
-                int v = Integer.parseInt(st.nextToken());
-                adj[u].add(v);
-                adj[v].add(u);
-            }
-
-            for (int i = 1; i <= V; i++) {
-                if (isBipartite && colors[i] == 0) {
-                    bfs(i);
-                }
-            }
-
-            sb.append(isBipartite ? "YES" : "NO").append("\n");
+        adj = new ArrayList[N + 1];
+        for (int i = 1; i <= N; i++) {
+            adj[i] = new ArrayList<>();
         }
-        System.out.println(sb);
+
+        int maxWeight = 0;
+
+        for (int i = 0; i < M; i++) {
+            st = new StringTokenizer(br.readLine());
+            int u = Integer.parseInt(st.nextToken());
+            int v = Integer.parseInt(st.nextToken());
+            int w = Integer.parseInt(st.nextToken());
+
+            adj[u].add(new Node(v, w));
+            adj[v].add(new Node(u, w));
+
+            maxWeight = Math.max(maxWeight, w);
+        }
+
+        st = new StringTokenizer(br.readLine());
+        startFactory = Integer.parseInt(st.nextToken());
+        endFactory = Integer.parseInt(st.nextToken());
+
+        // 이분 탐색 진행
+        long answer = 0;
+        long low = 1;
+        long high = maxWeight;
+
+        while (low <= high) {
+            long mid = (low + high) / 2;
+
+            if (canGo(mid)) {
+                answer = mid; // 가능하다면 답을 갱신하고
+                low = mid + 1; // 더 큰 중량을 시도해봄
+            } else {
+                high = mid - 1; // 불가능하다면 중량을 줄임
+            }
+        }
+
+        System.out.println(answer);
     }
 
-    // BFS 탐색
-    static void bfs(int start) {
+    static boolean canGo(long limitWeight) {
         Queue<Integer> q = new LinkedList<>();
-        q.offer(start);
-        colors[start] = 1; // 시작 정점을 빨강(1)으로 칠함
+        visited = new boolean[N + 1];
+
+        q.offer(startFactory);
+        visited[startFactory] = true;
 
         while (!q.isEmpty()) {
-            int curr = q.poll();
+            int current = q.poll();
 
-            for (int next : adj[curr]) {
-                // 1. 아직 방문하지 않은 인접 정점인 경우
-                if (colors[next] == 0) {
-                    colors[next] = -colors[curr]; // 현재와 반대 색(-1 * 1 = -1)으로 칠함
-                    q.offer(next);
-                }
-                // 2. 이미 방문했는데, 현재 정점과 색이 같다면 모순 발생
-                else if (colors[next] == colors[curr]) {
-                    isBipartite = false;
-                    return;
+            if (current == endFactory) {
+                return true;
+            }
+
+            for (Node next : adj[current]) {
+                if (!visited[next.to] && next.weight >= limitWeight) {
+                    visited[next.to] = true;
+                    q.offer(next.to);
                 }
             }
         }
+
+        return false;
     }
 }

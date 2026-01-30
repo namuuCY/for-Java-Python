@@ -1,98 +1,53 @@
 import java.io.*;
 import java.util.*;
-import java.util.function.BiFunction;
 
 public class Main {
-    // https://www.acmicpc.net/problem/1939
-    //
+    // https://www.acmicpc.net/problem/2458
+    // 키 순서
 
-
-    static class Node {
-        int to;
-        int weight;
-
-        public Node(int to, int weight) {
-            this.to = to;
-            this.weight = weight;
-        }
-    }
-
-    static int N, M;
-    static ArrayList<Node>[] adj;
-    static boolean[] visited;
-    static int startFactory, endFactory;
 
     public static void main(String[] args) throws IOException {
         BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
         StringTokenizer st = new StringTokenizer(br.readLine());
 
-        N = Integer.parseInt(st.nextToken());
-        M = Integer.parseInt(st.nextToken());
+        int N = Integer.parseInt(st.nextToken()); // 학생 수
+        int M = Integer.parseInt(st.nextToken()); // 비교 횟수
 
-        adj = new ArrayList[N + 1];
-        for (int i = 1; i <= N; i++) {
-            adj[i] = new ArrayList<>();
-        }
-
-        int maxWeight = 0;
+        // connected[i][j] = true : i가 j보다 키가 작다는 것을 안다.
+        boolean[][] connected = new boolean[N + 1][N + 1];
 
         for (int i = 0; i < M; i++) {
             st = new StringTokenizer(br.readLine());
-            int u = Integer.parseInt(st.nextToken());
-            int v = Integer.parseInt(st.nextToken());
-            int w = Integer.parseInt(st.nextToken());
-
-            adj[u].add(new Node(v, w));
-            adj[v].add(new Node(u, w));
-
-            maxWeight = Math.max(maxWeight, w);
+            int a = Integer.parseInt(st.nextToken());
+            int b = Integer.parseInt(st.nextToken());
+            connected[a][b] = true; // a < b
         }
 
-        st = new StringTokenizer(br.readLine());
-        startFactory = Integer.parseInt(st.nextToken());
-        endFactory = Integer.parseInt(st.nextToken());
-
-        // 이분 탐색 진행
-        long answer = 0;
-        long low = 1;
-        long high = maxWeight;
-
-        while (low <= high) {
-            long mid = (low + high) / 2;
-
-            if (canGo(mid)) {
-                answer = mid; // 가능하다면 답을 갱신하고
-                low = mid + 1; // 더 큰 중량을 시도해봄
-            } else {
-                high = mid - 1; // 불가능하다면 중량을 줄임
-            }
-        }
-
-        System.out.println(answer);
-    }
-
-    static boolean canGo(long limitWeight) {
-        Queue<Integer> q = new LinkedList<>();
-        visited = new boolean[N + 1];
-
-        q.offer(startFactory);
-        visited[startFactory] = true;
-
-        while (!q.isEmpty()) {
-            int current = q.poll();
-
-            if (current == endFactory) {
-                return true;
-            }
-
-            for (Node next : adj[current]) {
-                if (!visited[next.to] && next.weight >= limitWeight) {
-                    visited[next.to] = true;
-                    q.offer(next.to);
+        for (int k = 1; k <= N; k++) {
+            for (int i = 1; i <= N; i++) {
+                for (int j = 1; j <= N; j++) {
+                    if (connected[i][k] && connected[k][j]) {
+                        connected[i][j] = true;
+                    }
                 }
             }
         }
 
-        return false;
+        int answer = 0;
+
+        for (int i = 1; i <= N; i++) {
+            int count = 0;
+            for (int j = 1; j <= N; j++) {
+                if (i == j) continue;
+                if (connected[i][j] || connected[j][i]) {
+                    count++;
+                }
+            }
+            if (count == N - 1) {
+                answer++;
+            }
+        }
+
+        System.out.println(answer);
     }
 }

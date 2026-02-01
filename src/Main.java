@@ -2,93 +2,69 @@ import java.io.*;
 import java.util.*;
 
 public class Main {
-    // https://www.acmicpc.net/problem/14923
-    // 미로 탈출
+    // https://www.acmicpc.net/problem/1719
+    // 택배
 
-
-    static int N, M;
-    static int[][] map;
-    static boolean[][][] visited; // [x][y][벽파괴여부(0 or 1)]
-    static int[] dx = {-1, 1, 0, 0}; // 상하좌우
-    static int[] dy = {0, 0, -1, 1};
-
-    // BFS를 위한 노드 클래스
-    static class Node {
-        int x, y;
-        int dist;   // 현재까지 이동 거리
-        int broken; // 0: 벽 안 부숨, 1: 벽 부숨
-
-        public Node(int x, int y, int dist, int broken) {
-            this.x = x;
-            this.y = y;
-            this.dist = dist;
-            this.broken = broken;
-        }
-    }
+    static final int INF = 200000000; // 충분히 큰 값 (200 * 1000 보다 커야 함)
 
     public static void main(String[] args) throws IOException {
         BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
         StringTokenizer st = new StringTokenizer(br.readLine());
 
-        N = Integer.parseInt(st.nextToken());
-        M = Integer.parseInt(st.nextToken());
+        int n = Integer.parseInt(st.nextToken()); // 집하장 개수
+        int m = Integer.parseInt(st.nextToken()); // 경로 개수
 
-        st = new StringTokenizer(br.readLine());
-        int Hx = Integer.parseInt(st.nextToken()) - 1;
-        int Hy = Integer.parseInt(st.nextToken()) - 1;
+        int[][] dist = new int[n + 1][n + 1];
+        int[][] path = new int[n + 1][n + 1];
 
-        st = new StringTokenizer(br.readLine());
-        int Ex = Integer.parseInt(st.nextToken()) - 1;
-        int Ey = Integer.parseInt(st.nextToken()) - 1;
+        for (int i = 1; i <= n; i++) {
+            for (int j = 1; j <= n; j++) {
+                if (i == j) {
+                    dist[i][j] = 0;
+                } else {
+                    dist[i][j] = INF;
+                }
+            }
+        }
 
-        map = new int[N][M];
-        visited = new boolean[N][M][2]; // 0: 안 부숨, 1: 부숨
-
-        for (int i = 0; i < N; i++) {
+        for (int i = 0; i < m; i++) {
             st = new StringTokenizer(br.readLine());
-            for (int j = 0; j < M; j++) {
-                map[i][j] = Integer.parseInt(st.nextToken());
-            }
+            int u = Integer.parseInt(st.nextToken());
+            int v = Integer.parseInt(st.nextToken());
+            int w = Integer.parseInt(st.nextToken());
+
+            dist[u][v] = Math.min(dist[u][v], w);
+            dist[v][u] = Math.min(dist[v][u], w);
+
+            path[u][v] = v;
+            path[v][u] = u;
         }
 
-        // 2. BFS 탐색
-        System.out.println(bfs(Hx, Hy, Ex, Ey));
-    }
+        for (int k = 1; k <= n; k++) {
+            for (int i = 1; i <= n; i++) {
+                for (int j = 1; j <= n; j++) {
+                    if (i == j) continue;
 
-    static int bfs(int startX, int startY, int endX, int endY) {
-        Queue<Node> q = new LinkedList<>();
-
-        q.offer(new Node(startX, startY, 0, 0));
-        visited[startX][startY][0] = true;
-
-        while (!q.isEmpty()) {
-            Node current = q.poll();
-
-            if (current.x == endX && current.y == endY) {
-                return current.dist;
-            }
-
-            for (int i = 0; i < 4; i++) {
-                int nx = current.x + dx[i];
-                int ny = current.y + dy[i];
-
-                if (nx < 0 || ny < 0 || nx >= N || ny >= M) continue;
-
-                if (map[nx][ny] == 0) {
-                    if (!visited[nx][ny][current.broken]) {
-                        visited[nx][ny][current.broken] = true;
-                        q.offer(new Node(nx, ny, current.dist + 1, current.broken));
-                    }
-                }
-                else {
-                    if (current.broken == 0 && !visited[nx][ny][1]) {
-                        visited[nx][ny][1] = true;
-                        q.offer(new Node(nx, ny, current.dist + 1, 1));
+                    if (dist[i][j] > dist[i][k] + dist[k][j]) {
+                        dist[i][j] = dist[i][k] + dist[k][j];
+                        path[i][j] = path[i][k];
                     }
                 }
             }
         }
 
-        return -1;
+        StringBuilder sb = new StringBuilder();
+        for (int i = 1; i <= n; i++) {
+            for (int j = 1; j <= n; j++) {
+                if (i == j) {
+                    sb.append("- ");
+                } else {
+                    sb.append(path[i][j]).append(" ");
+                }
+            }
+            sb.append("\n");
+        }
+
+        System.out.println(sb);
     }
 }

@@ -2,70 +2,43 @@ import java.io.*;
 import java.util.*;
 
 public class Main {
-    // https://www.acmicpc.net/problem/22866
-    // 탑 보기
+    // https://www.acmicpc.net/problem/14719
+    // 빗물
 
     public static void main(String[] args) throws IOException {
         BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
-        int N = Integer.parseInt(br.readLine());
-
-        int[] h = new int[N + 1];
         StringTokenizer st = new StringTokenizer(br.readLine());
-        for(int i = 1; i <= N; i++) {
-            h[i] = Integer.parseInt(st.nextToken());
+
+        int H = Integer.parseInt(st.nextToken());
+        int W = Integer.parseInt(st.nextToken());
+
+        int[] blocks = new int[W];
+        st = new StringTokenizer(br.readLine());
+        for (int i = 0; i < W; i++) {
+            blocks[i] = Integer.parseInt(st.nextToken());
         }
 
-        int[] cnt = new int[N + 1];
-        int[] near = new int[N + 1];
+        int totalWater = 0;
 
-        Arrays.fill(near, -1);
+        for (int i = 1; i < W - 1; i++) {
+            int leftMax = 0;
+            int rightMax = 0;
 
-        Stack<Integer> stack = new Stack<>();
-
-        for(int i = 1; i <= N; i++) {
-            while(!stack.isEmpty() && h[stack.peek()] <= h[i]) {
-                stack.pop();
+            for (int j = 0; j < i; j++) {
+                leftMax = Math.max(leftMax, blocks[j]);
             }
 
-            cnt[i] += stack.size();
-
-            if(!stack.isEmpty()) {
-                near[i] = stack.peek();
+            for (int j = i + 1; j < W; j++) {
+                rightMax = Math.max(rightMax, blocks[j]);
             }
-            stack.push(i);
+
+            int minWall = Math.min(leftMax, rightMax);
+
+            if (minWall > blocks[i]) {
+                totalWater += (minWall - blocks[i]);
+            }
         }
 
-        stack.clear();
-
-        for(int i = N; i >= 1; i--) {
-            while(!stack.isEmpty() && h[stack.peek()] <= h[i]) {
-                stack.pop();
-            }
-            cnt[i] += stack.size();
-            if(!stack.isEmpty()) {
-                int rightIndex = stack.peek();
-                if(near[i] == -1) {
-                    near[i] = rightIndex;
-                }
-                else {
-                    int distLeft = i - near[i];
-                    int distRight = rightIndex - i;
-                    if(distRight < distLeft) {
-                        near[i] = rightIndex;
-                    }
-                }
-            }
-
-            stack.push(i);
-        }
-        StringBuilder sb = new StringBuilder();
-        for(int i = 1; i <= N; i++) {
-            sb.append(cnt[i]);
-            if(cnt[i] > 0) {
-                sb.append(" ").append(near[i]);
-            }
-            sb.append("\n");
-        }
-        System.out.print(sb);
+        System.out.println(totalWater);
     }
 }

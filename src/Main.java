@@ -2,43 +2,39 @@ import java.io.*;
 import java.util.*;
 
 public class Main {
-    // https://www.acmicpc.net/problem/14719
-    // 빗물
+    // https://www.acmicpc.net/problem/2212
+    // 센서
 
     public static void main(String[] args) throws IOException {
         BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
+
+        int N = Integer.parseInt(br.readLine());
+        int K = Integer.parseInt(br.readLine());
+
+        if (K >= N) {
+            System.out.println(0);
+            return;
+        }
+
+        int[] sensors = new int[N];
         StringTokenizer st = new StringTokenizer(br.readLine());
-
-        int H = Integer.parseInt(st.nextToken());
-        int W = Integer.parseInt(st.nextToken());
-
-        int[] blocks = new int[W];
-        st = new StringTokenizer(br.readLine());
-        for (int i = 0; i < W; i++) {
-            blocks[i] = Integer.parseInt(st.nextToken());
+        for (int i = 0; i < N; i++) {
+            sensors[i] = Integer.parseInt(st.nextToken());
         }
 
-        int totalWater = 0;
-
-        for (int i = 1; i < W - 1; i++) {
-            int leftMax = 0;
-            int rightMax = 0;
-
-            for (int j = 0; j < i; j++) {
-                leftMax = Math.max(leftMax, blocks[j]);
-            }
-
-            for (int j = i + 1; j < W; j++) {
-                rightMax = Math.max(rightMax, blocks[j]);
-            }
-
-            int minWall = Math.min(leftMax, rightMax);
-
-            if (minWall > blocks[i]) {
-                totalWater += (minWall - blocks[i]);
-            }
+        Arrays.sort(sensors);
+        int[] diffs = new int[N - 1];
+        for (int i = 0; i < N - 1; i++) {
+            diffs[i] = sensors[i + 1] - sensors[i];
         }
 
-        System.out.println(totalWater);
+        Arrays.sort(diffs);
+
+        int result = 0;
+        for (int i = 0; i < N - K; i++) {
+            result += diffs[i];
+        }
+
+        System.out.println(result);
     }
 }

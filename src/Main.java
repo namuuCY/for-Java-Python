@@ -2,55 +2,69 @@ import java.io.*;
 import java.util.*;
 
 public class Main {
-    // https://www.acmicpc.net/problem/14381
-    // 숫자세는 양
+    // https://www.acmicpc.net/problem/33557
+    // 곱셈을 누가 이렇게 해 ㅋㅋ
 
     public static void main(String[] args) throws IOException {
         BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
+        StringBuilder sb = new StringBuilder();
 
-        // 첫 번째 줄: 테스트 케이스의 개수 T
+        // 테스트 케이스 개수
         int T = Integer.parseInt(br.readLine());
 
-        for (int i = 1; i <= T; i++) {
-            int N = Integer.parseInt(br.readLine());
+        while (T-- > 0) {
+            StringTokenizer st = new StringTokenizer(br.readLine());
+            String A_str = st.nextToken();
+            String B_str = st.nextToken();
 
-            // 결과 계산 및 출력 형식 맞추기
-            String result = solve(N);
-            System.out.println("Case #" + i + ": " + result);
+            // 1. 실제 곱셈 결과 계산
+            long A = Long.parseLong(A_str);
+            long B = Long.parseLong(B_str);
+            long realResult = A * B;
+
+            // 2. 잘못된 곱셈 결과 문자열 생성
+            String fakeResult = getFakeMultiplication(A_str, B_str);
+
+            // 3. 비교
+            if (String.valueOf(realResult).equals(fakeResult)) {
+                sb.append("1\n");
+            } else {
+                sb.append("0\n");
+            }
         }
+        System.out.print(sb);
     }
 
-    private static String solve(int n) {
-        // N이 0이면 영원히 0만 나오므로 불가능
-        if (n == 0) return "INSOMNIA";
+    // 잘못된 곱셈 방식을 구현한 함수
+    private static String getFakeMultiplication(String s1, String s2) {
+        StringBuilder sb = new StringBuilder();
 
-        boolean[] visited = new boolean[10]; // 0~9 숫자 등장 여부 체크
-        int count = 0; // 발견한 서로 다른 숫자의 개수
-        int multiplier = 1;
-        long currentVal = 0;
+        int len1 = s1.length();
+        int len2 = s2.length();
+        int maxLen = Math.max(len1, len2);
 
-        while (true) {
-            currentVal = (long) n * multiplier;
-            long temp = currentVal;
+        // 뒤에서부터(일의 자리부터) 앞으로 이동하며 처리
+        // 결과는 앞에 붙여야 하므로 insert(0, ...) 사용
+        for (int i = 0; i < maxLen; i++) {
+            int idx1 = len1 - 1 - i;
+            int idx2 = len2 - 1 - i;
 
-            // 현재 숫자의 각 자릿수 확인
-            while (temp > 0) {
-                int digit = (int) (temp % 10);
-
-                // 처음 보는 숫자라면 체크
-                if (!visited[digit]) {
-                    visited[digit] = true;
-                    count++;
-                }
-                temp /= 10;
+            // 두 수 모두 해당 자리에 숫자가 있는 경우 -> 곱하기
+            if (idx1 >= 0 && idx2 >= 0) {
+                int n1 = s1.charAt(idx1) - '0';
+                int n2 = s2.charAt(idx2) - '0';
+                sb.insert(0, n1 * n2);
             }
-
-            // 0~9 모든 숫자를 다 봤으면 종료
-            if (count == 10) {
-                return String.valueOf(currentVal);
+            // s1만 있는 경우 -> s1 숫자 그대로
+            else if (idx1 >= 0) {
+                sb.insert(0, s1.charAt(idx1));
             }
-
-            multiplier++;
+            // s2만 있는 경우 -> s2 숫자 그대로
+            else if (idx2 >= 0) {
+                sb.insert(0, s2.charAt(idx2));
+            }
         }
+
+        return sb.toString();
     }
 }

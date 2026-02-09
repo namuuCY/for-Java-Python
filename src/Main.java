@@ -2,38 +2,35 @@ import java.io.*;
 import java.util.*;
 
 public class Main {
-    // https://www.acmicpc.net/problem/23885
-    // 비숍 투어
+    // https://www.acmicpc.net/problem/1975
 
-    public static void main(String[] args) throws IOException {
-        BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
+    public static void main(String[] args) {
+        Scanner sc = new Scanner(System.in);
 
-        StringTokenizer st = new StringTokenizer(br.readLine());
-        long N = Long.parseLong(st.nextToken());
-        long M = Long.parseLong(st.nextToken());
+        if (!sc.hasNextInt()) return;
+        int T = sc.nextInt(); // 테스트 케이스 개수
 
-        st = new StringTokenizer(br.readLine());
-        long sx = Long.parseLong(st.nextToken());
-        long sy = Long.parseLong(st.nextToken());
-
-        st = new StringTokenizer(br.readLine());
-        long ex = Long.parseLong(st.nextToken());
-        long ey = Long.parseLong(st.nextToken());
-
-        if (sx == ex && sy == ey) {
-            System.out.println("YES");
-            return;
+        StringBuilder sb = new StringBuilder();
+        while (T-- > 0) {
+            int N = sc.nextInt();
+            sb.append(solve(N)).append("\n");
         }
+        // 한꺼번에 출력하여 출력 속도 최적화
+        System.out.print(sb.toString());
+    }
 
-        if (N == 1 || M == 1) {
-            System.out.println("NO");
-            return;
-        }
+    public static long solve(int N) {
+        long totalZeros = 0;
 
-        if ((sx + sy) % 2 == (ex + ey) % 2) {
-            System.out.println("YES");
-        } else {
-            System.out.println("NO");
+        // 진법 b는 2부터 N까지 확인 (b > N이면 0의 개수는 무조건 0)
+        for (int b = 2; b <= N; b++) {
+            int tempN = N;
+            // N이 b로 나누어 떨어지는 동안 0의 개수 증가
+            while (tempN > 0 && tempN % b == 0) {
+                totalZeros++;
+                tempN /= b;
+            }
         }
+        return totalZeros;
     }
 }

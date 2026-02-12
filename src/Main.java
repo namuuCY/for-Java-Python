@@ -2,40 +2,59 @@ import java.io.*;
 import java.util.*;
 
 public class Main {
-    // https://www.acmicpc.net/problem/17451
+    // https://www.acmicpc.net/problem/1907
 
-    public static void main(String[] args) throws Exception {
-        BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
+    static class Molecule {
+        int c = 0, h = 0, o = 0;
 
-        int n = Integer.parseInt(br.readLine());
-        long[] v = new long[n];
+        public Molecule(String formula) {
+            int len = formula.length();
+            for (int i = 0; i < len; i++) {
+                char atom = formula.charAt(i);
+                int count = 1;
 
-        StringTokenizer st = new StringTokenizer(br.readLine());
-        for (int i = 0; i < n; i++) {
-            v[i] = Long.parseLong(st.nextToken());
-        }
-
-        // 마지막 행성으로 가는 속도부터 역추적 시작
-        long currentV = v[n - 1];
-
-        // n-2번째 행성부터 0번째(지구)까지 거꾸로 확인
-        for (int i = n - 2; i >= 0; i--) {
-            if (currentV <= v[i]) {
-                // 현재 속도가 다음 필요한 속도 v[i]보다 작거나 같으면
-                // 그냥 v[i]로 맞추는 것이 이득 (속도는 줄일 수만 있으므로)
-                currentV = v[i];
-            } else {
-                // currentV가 v[i]보다 크다면, v[i]의 배수 중
-                // currentV 이상인 가장 작은 값을 찾아야 함
-                if (currentV % v[i] != 0) {
-                    // 배수가 아니라면 올림 처리
-                    // (currentV / v[i] + 1) * v[i] 와 동일함
-                    currentV = ((currentV / v[i]) + 1) * v[i];
+                // 다음 문자가 숫자라면 count 업데이트
+                if (i + 1 < len && Character.isDigit(formula.charAt(i + 1))) {
+                    count = formula.charAt(i + 1) - '0';
+                    i++; // 숫자 부분 건너뜀
                 }
-                // 이미 배수라면 currentV를 그대로 유지 (속도를 높일 필요 없음)
+
+                if (atom == 'C') c += count;
+                else if (atom == 'H') h += count;
+                else if (atom == 'O') o += count;
             }
         }
+    }
 
-        System.out.println(currentV);
+    public static void main(String[] args) {
+        Scanner sc = new Scanner(System.in);
+        String line = sc.next();
+
+        // +, = 기준으로 분자 분리
+        String[] parts = line.split("[+=]");
+        Molecule m1 = new Molecule(parts[0]);
+        Molecule m2 = new Molecule(parts[1]);
+        Molecule m3 = new Molecule(parts[2]);
+
+        // 1부터 10까지 완전 탐색 (사전순 출력을 위해 1부터 시작)
+        for (int x1 = 1; x1 <= 10; x1++) {
+            for (int x2 = 1; x2 <= 10; x2++) {
+                for (int x3 = 1; x3 <= 10; x3++) {
+                    if (isBalanced(m1, m2, m3, x1, x2, x3)) {
+                        System.out.println(x1 + " " + x2 + " " + x3);
+                        return; // 가장 먼저 찾은 것이 사전순 최소
+                    }
+                }
+            }
+        }
+    }
+
+    private static boolean isBalanced(Molecule m1, Molecule m2, Molecule m3, int x1, int x2, int x3) {
+        // C, H, O 각각의 총 합이 같은지 확인
+        boolean cMatch = (x1 * m1.c + x2 * m2.c) == (x3 * m3.c);
+        boolean hMatch = (x1 * m1.h + x2 * m2.h) == (x3 * m3.h);
+        boolean oMatch = (x1 * m1.o + x2 * m2.o) == (x3 * m3.o);
+
+        return cMatch && hMatch && oMatch;
     }
 }

@@ -2,50 +2,46 @@ import java.io.*;
 import java.util.*;
 
 public class Main {
-    // https://www.acmicpc.net/problem/15947
+    // https://www.acmicpc.net/problem/5698
 
-    public static void main(String[] args) {
-        Scanner sc = new Scanner(System.in);
-        if (!sc.hasNextInt()) return;
+    public static void main(String[] args) throws IOException {
+        BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
+        StringBuilder sb = new StringBuilder();
 
-        int n = sc.nextInt();
+        while (true) {
+            String line = br.readLine();
 
-        // 0-based index로 변환
-        int c = (n - 1) / 14; // 진행된 사이클 횟수
-        int p = (n - 1) % 14; // 현재 사이클 내에서의 단어 위치 (0~13)
-
-        // 위치에 따른 단어 출력
-        if (p == 0 || p == 12) {
-            System.out.println("baby");
-        } else if (p == 1 || p == 13) {
-            System.out.println("sukhwan");
-        } else if (p == 4) {
-            System.out.println("very");
-        } else if (p == 5) {
-            System.out.println("cute");
-        } else if (p == 8) {
-            System.out.println("in");
-        } else if (p == 9) {
-            System.out.println("bed");
-        } else if (p == 2 || p == 6 || p == 10) {
-            // tururu 자리: 기본 ru 2개 + 사이클 횟수
-            printTuRu(c + 2);
-        } else if (p == 3 || p == 7 || p == 11) {
-            // turu 자리: 기본 ru 1개 + 사이클 횟수
-            printTuRu(c + 1);
-        }
-    }
-
-    // ru의 개수(k)에 따라 알맞은 형식으로 출력하는 메서드
-    private static void printTuRu(int k) {
-        if (k >= 5) {
-            System.out.println("tu+ru*" + k);
-        } else {
-            StringBuilder sb = new StringBuilder("tu");
-            for (int i = 0; i < k; i++) {
-                sb.append("ru");
+            // 입력 종료 조건
+            if (line.equals("*")) {
+                break;
             }
-            System.out.println(sb.toString());
+
+            StringTokenizer st = new StringTokenizer(line);
+            if (!st.hasMoreTokens()) continue;
+
+            // 첫 번째 단어의 첫 글자를 소문자로 변환하여 기준(target)으로 설정
+            char target = Character.toLowerCase(st.nextToken().charAt(0));
+            boolean isTautogram = true;
+
+            // 나머지 단어들의 첫 글자와 비교
+            while (st.hasMoreTokens()) {
+                char current = Character.toLowerCase(st.nextToken().charAt(0));
+
+                if (target != current) {
+                    isTautogram = false;
+                    break; // 하나라도 다르면 더 이상 검사할 필요 없음
+                }
+            }
+
+            // 결과 저장
+            if (isTautogram) {
+                sb.append("Y\n");
+            } else {
+                sb.append("N\n");
+            }
         }
+
+        // 한 번에 출력
+        System.out.print(sb.toString());
     }
 }

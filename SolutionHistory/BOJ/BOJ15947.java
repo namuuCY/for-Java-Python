@@ -31,6 +31,7 @@ public class Main {
 			// tururu 자리: 기본 ru 2개 + 사이클 횟수
 			printTuRu(c + 2);
 		} else if (p == 3 || p == 7 || p == 11) {
+
 			// turu 자리: 기본 ru 1개 + 사이클 횟수
 			printTuRu(c + 1);
 		}

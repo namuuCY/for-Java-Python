@@ -2,46 +2,37 @@ import java.io.*;
 import java.util.*;
 
 public class Main {
-    // https://www.acmicpc.net/problem/5698
+    // https://www.acmicpc.net/problem/17502
 
     public static void main(String[] args) throws IOException {
         BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
-        StringBuilder sb = new StringBuilder();
 
-        while (true) {
-            String line = br.readLine();
+        int n = Integer.parseInt(br.readLine());
+        char[] arr = br.readLine().toCharArray();
 
-            // 입력 종료 조건
-            if (line.equals("*")) {
-                break;
+        int left = 0;
+        int right = n - 1;
+
+        // 양 끝에서부터 가운데로 이동하며 검사
+        while (left <= right) {
+            if (arr[left] == '?' && arr[right] == '?') {
+                // 둘 다 ? 이면 임의의 문자(예: 'a')로 채움
+                arr[left] = 'a';
+                arr[right] = 'a';
+            } else if (arr[left] == '?') {
+                // 왼쪽만 ? 이면 오른쪽 문자와 똑같이 맞춤
+                arr[left] = arr[right];
+            } else if (arr[right] == '?') {
+                // 오른쪽만 ? 이면 왼쪽 문자와 똑같이 맞춤
+                arr[right] = arr[left];
             }
 
-            StringTokenizer st = new StringTokenizer(line);
-            if (!st.hasMoreTokens()) continue;
-
-            // 첫 번째 단어의 첫 글자를 소문자로 변환하여 기준(target)으로 설정
-            char target = Character.toLowerCase(st.nextToken().charAt(0));
-            boolean isTautogram = true;
-
-            // 나머지 단어들의 첫 글자와 비교
-            while (st.hasMoreTokens()) {
-                char current = Character.toLowerCase(st.nextToken().charAt(0));
-
-                if (target != current) {
-                    isTautogram = false;
-                    break; // 하나라도 다르면 더 이상 검사할 필요 없음
-                }
-            }
-
-            // 결과 저장
-            if (isTautogram) {
-                sb.append("Y\n");
-            } else {
-                sb.append("N\n");
-            }
+            // 포인터 이동
+            left++;
+            right--;
         }
 
-        // 한 번에 출력
-        System.out.print(sb.toString());
+        // 완성된 문자열 출력
+        System.out.println(new String(arr));
     }
 }

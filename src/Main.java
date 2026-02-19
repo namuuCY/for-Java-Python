@@ -4,11 +4,12 @@ import java.util.*;
 public class Main {
     // https://www.acmicpc.net/problem/12021
     // 보물 찾기
+    static double EPSILON = 1e-6;
 
     static class Pair {
         double a;
         double b;
-        double EPSILON = 1e-6;
+
 
         Pair(double a, double b) {
             this.a = a;
@@ -33,14 +34,14 @@ public class Main {
     public static void main(String[] args) throws IOException {
         BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
         StringTokenizer st = new StringTokenizer(br.readLine());
-        long a = Long.parseLong(st.nextToken());
-        long b = Long.parseLong(st.nextToken());
+        double a = Double.parseDouble(st.nextToken());
+        double b = Double.parseDouble(st.nextToken());
         Pair pair = new Pair(a, b);
 
         while (true) {
             Pair next = pair.update();
             if (next.isClose(pair)) {
-                System.out.println(next.a + " " + next.b);
+                System.out.printf("%.6f %.6f\n", next.a, next.b);
                 return;
             }
             pair = next;

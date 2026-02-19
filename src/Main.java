@@ -2,71 +2,48 @@ import java.io.*;
 import java.util.*;
 
 public class Main {
-    // https://www.acmicpc.net/problem/7347
-    // 플립과 시프트
-    // 전체 길이가 짝수인 경우, 홀수인 경우 분리해서 생각
-    // 홀수인 경우, 움직이면 홀수 <-> 짝수 어디든 갈 수 있음.
-    // 짝수인 경우, 움직여도 홀수는 여전히 홀수, 짝수는 여전히 짝수
+    // https://www.acmicpc.net/problem/12021
+    // 보물 찾기
 
-    // 2
-    //18 0 0 1 0 1 1 1 1 0 1 0 0 1 0 0 0 0 1
-    //14 1 1 0 0 1 1 1 0 0 1 1 0 1 0
+    static class Pair {
+        double a;
+        double b;
+        double EPSILON = 1e-6;
+
+        Pair(double a, double b) {
+            this.a = a;
+            this.b = b;
+        }
+
+        Pair update() {
+            double tempA ;
+            double tempB ;
+
+            tempA = (this.a + this.b) / 2;
+            tempB = 2 * (this.a * this.b) / (this.a + this.b);
+            return new Pair(tempA, tempB);
+        }
+
+        boolean isClose(Pair prev) {
+            return Math.abs(this.a - prev.a) < EPSILON
+                    && Math.abs(this.b - prev.b) < EPSILON;
+        }
+    }
 
     public static void main(String[] args) throws IOException {
         BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
+        StringTokenizer st = new StringTokenizer(br.readLine());
+        long a = Long.parseLong(st.nextToken());
+        long b = Long.parseLong(st.nextToken());
+        Pair pair = new Pair(a, b);
 
-        int trialCount = Integer.parseInt(br.readLine());
-        StringTokenizer st;
-        StringBuilder sb = new StringBuilder();
-        while (trialCount -- > 0) {
-
-            st = new StringTokenizer(br.readLine());
-            int length = Integer.parseInt(st.nextToken());
-
-            if (length % 2 == 1) {
-                sb.append("YES");
-                if (trialCount > 0) sb.append("\n");
-                continue;
+        while (true) {
+            Pair next = pair.update();
+            if (next.isClose(pair)) {
+                System.out.println(next.a + " " + next.b);
+                return;
             }
-
-            boolean[] currentSequence = parseSequence(st, length);
-            boolean isPossible = analyzePossibility(currentSequence, length);
-            sb.append( isPossible ? "YES" : "NO");
-            if (trialCount > 0) {
-                sb.append("\n");
-            }
+            pair = next;
         }
-
-        System.out.println(sb);
     }
-
-    private static boolean[] parseSequence(StringTokenizer st, int length) throws IOException {
-        boolean[] seq = new boolean[length];
-
-        for (int i = 0 ; i < length ; i++) {
-            if (!"1".equals( st.nextToken() )) {
-                continue;
-            }
-            seq[i] = true;
-        }
-
-        return seq;
-    }
-
-    private static boolean analyzePossibility(boolean[] sequence, int length) {
-        int evenCount = 0;
-        int oddCount = 0;
-        for (int i = 0 ; i < length; i++) {
-            if (!sequence[i]) {
-                continue;
-            }
-            if (i % 2 == 0) {
-                evenCount ++;
-            } else {
-                oddCount ++;
-            }
-        }
-
-		return Math.abs( evenCount - oddCount ) <= 1;
-	}
 }

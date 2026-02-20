@@ -2,49 +2,58 @@ import java.io.*;
 import java.util.*;
 
 public class Main {
-    // https://www.acmicpc.net/problem/12021
-    // 보물 찾기
-    static double EPSILON = 1e-6;
-
-    static class Pair {
-        double a;
-        double b;
-
-
-        Pair(double a, double b) {
-            this.a = a;
-            this.b = b;
-        }
-
-        Pair update() {
-            double tempA ;
-            double tempB ;
-
-            tempA = (this.a + this.b) / 2;
-            tempB = 2 * (this.a * this.b) / (this.a + this.b);
-            return new Pair(tempA, tempB);
-        }
-
-        boolean isClose(Pair prev) {
-            return Math.abs(this.a - prev.a) < EPSILON
-                    && Math.abs(this.b - prev.b) < EPSILON;
-        }
-    }
+    // https://www.acmicpc.net/problem/33938
 
     public static void main(String[] args) throws IOException {
         BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
         StringTokenizer st = new StringTokenizer(br.readLine());
-        double a = Double.parseDouble(st.nextToken());
-        double b = Double.parseDouble(st.nextToken());
-        Pair pair = new Pair(a, b);
 
-        while (true) {
-            Pair next = pair.update();
-            if (next.isClose(pair)) {
-                System.out.printf("%.6f %.6f\n", next.a, next.b);
-                return;
+        int N = Integer.parseInt(st.nextToken());
+        int M = Integer.parseInt(st.nextToken());
+
+        // 예외 처리: 0원을 만드는 데 필요한 동전은 항상 0개입니다.
+        if (M == 0) {
+            System.out.println(0);
+            return;
+        }
+
+        // 동전이 없는데 0원 아닌 금액을 만들어야 하는 경우
+        if (N == 0) {
+            System.out.println(-1);
+            return;
+        }
+
+        int[] p = new int[N];
+        st = new StringTokenizer(br.readLine());
+        for (int i = 0; i < N; i++) {
+            p[i] = Integer.parseInt(st.nextToken());
+        }
+
+        int minCount = Integer.MAX_VALUE;
+
+        if (N == 1) {
+            // 동전이 1개일 때: p[0] * i = M 인 i 찾기
+            for (int i = 0; i <= 2000; i++) {
+                if (p[0] * i == M) {
+                    minCount = Math.min(minCount, i);
+                }
             }
-            pair = next;
+        } else if (N == 2) {
+            // 동전이 2개일 때: p[0] * i + p[1] * j = M 인 최소 i + j 찾기
+            for (int i = 0; i <= 2000; i++) {
+                for (int j = 0; j <= 2000; j++) {
+                    if (p[0] * i + p[1] * j == M) {
+                        minCount = Math.min(minCount, i + j);
+                    }
+                }
+            }
+        }
+
+        // 결과 출력
+        if (minCount == Integer.MAX_VALUE) {
+            System.out.println(-1);
+        } else {
+            System.out.println(minCount);
         }
     }
 }

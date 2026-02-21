@@ -2,58 +2,33 @@ import java.io.*;
 import java.util.*;
 
 public class Main {
-    // https://www.acmicpc.net/problem/33938
+    // https://www.acmicpc.net/problem/25631
 
     public static void main(String[] args) throws IOException {
         BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
+
+        int N = Integer.parseInt(br.readLine());
         StringTokenizer st = new StringTokenizer(br.readLine());
 
-        int N = Integer.parseInt(st.nextToken());
-        int M = Integer.parseInt(st.nextToken());
+        // 크기별 인형 개수를 저장할 HashMap
+        HashMap<Integer, Integer> countMap = new HashMap<>();
 
-        // 예외 처리: 0원을 만드는 데 필요한 동전은 항상 0개입니다.
-        if (M == 0) {
-            System.out.println(0);
-            return;
-        }
+        int maxCount = 0;
 
-        // 동전이 없는데 0원 아닌 금액을 만들어야 하는 경우
-        if (N == 0) {
-            System.out.println(-1);
-            return;
-        }
-
-        int[] p = new int[N];
-        st = new StringTokenizer(br.readLine());
         for (int i = 0; i < N; i++) {
-            p[i] = Integer.parseInt(st.nextToken());
-        }
+            int size = Integer.parseInt(st.nextToken());
 
-        int minCount = Integer.MAX_VALUE;
+            // 현재 크기의 인형 개수를 1 증가시킴
+            int currentCount = countMap.getOrDefault(size, 0) + 1;
+            countMap.put(size, currentCount);
 
-        if (N == 1) {
-            // 동전이 1개일 때: p[0] * i = M 인 i 찾기
-            for (int i = 0; i <= 2000; i++) {
-                if (p[0] * i == M) {
-                    minCount = Math.min(minCount, i);
-                }
-            }
-        } else if (N == 2) {
-            // 동전이 2개일 때: p[0] * i + p[1] * j = M 인 최소 i + j 찾기
-            for (int i = 0; i <= 2000; i++) {
-                for (int j = 0; j <= 2000; j++) {
-                    if (p[0] * i + p[1] * j == M) {
-                        minCount = Math.min(minCount, i + j);
-                    }
-                }
+            // 전체 중 가장 많이 등장한 빈도수 업데이트
+            if (currentCount > maxCount) {
+                maxCount = currentCount;
             }
         }
 
-        // 결과 출력
-        if (minCount == Integer.MAX_VALUE) {
-            System.out.println(-1);
-        } else {
-            System.out.println(minCount);
-        }
+        // 최소로 남는 인형의 개수는 가장 많이 중복된 인형의 개수와 같음
+        System.out.println(maxCount);
     }
 }

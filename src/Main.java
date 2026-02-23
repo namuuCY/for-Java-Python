@@ -2,51 +2,53 @@ import java.io.*;
 import java.util.*;
 
 public class Main {
-    // https://www.acmicpc.net/problem/17127
+    static class Condo implements Comparable<Condo> {
+        int d, c;
+
+        Condo(int d, int c) {
+            this.d = d;
+            this.c = c;
+        }
+
+        // 1. 거리(d) 기준 오름차순
+        // 2. 거리가 같다면 비용(c) 기준 오름차순
+        @Override
+        public int compareTo(Condo o) {
+            if (this.d == o.d) {
+                return this.c - o.c;
+            }
+            return this.d - o.d;
+        }
+    }
 
     public static void main(String[] args) throws IOException {
         BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
-
         int N = Integer.parseInt(br.readLine());
-        int[] A = new int[N];
 
-        StringTokenizer st = new StringTokenizer(br.readLine());
+        List<Condo> list = new ArrayList<>();
         for (int i = 0; i < N; i++) {
-            A[i] = Integer.parseInt(st.nextToken());
+            StringTokenizer st = new StringTokenizer(br.readLine());
+            int d = Integer.parseInt(st.nextToken());
+            int c = Integer.parseInt(st.nextToken());
+            list.add(new Condo(d, c));
         }
 
-        long maxSum = 0;
+        // 정렬: 거리 가깝고 -> 비용 싼 순서
+        Collections.sort(list);
 
-        // i, j, k는 각 그룹의 마지막 인덱스를 의미함
-        // 첫 번째 그룹 끝: i
-        // 두 번째 그룹 끝: j
-        // 세 번째 그룹 끝: k
-        // 네 번째 그룹은 k+1부터 N-1까지
+        int count = 0;
+        int minCost = Integer.MAX_VALUE;
 
-        for (int i = 0; i <= N - 4; i++) {
-            for (int j = i + 1; j <= N - 3; j++) {
-                for (int k = j + 1; k <= N - 2; k++) {
-
-                    // 각 그룹의 곱 계산
-                    long p1 = getProduct(A, 0, i);
-                    long p2 = getProduct(A, i + 1, j);
-                    long p3 = getProduct(A, j + 1, k);
-                    long p4 = getProduct(A, k + 1, N - 1);
-
-                    maxSum = Math.max(maxSum, p1 + p2 + p3 + p4);
-                }
+        for (Condo current : list) {
+            // 현재 콘도가 지금까지 나온 콘도들 중 최소 비용보다 더 저렴하다면
+            // (거리순으로 왔기 때문에, 나보다 앞선 애들은 거리상 이점이 있거나 같음.
+            // 그런데 내가 그들보다 비용까지 싸다면 내가 후보가 됨)
+            if (current.c < minCost) {
+                count++;
+                minCost = current.c; // 최소 비용 갱신
             }
         }
 
-        System.out.println(maxSum);
-    }
-
-    // 배열의 특정 구간 [start, end]의 곱을 반환하는 함수
-    public static long getProduct(int[] arr, int start, int end) {
-        long prod = 1;
-        for (int i = start; i <= end; i++) {
-            prod *= arr[i];
-        }
-        return prod;
+        System.out.println(count);
     }
 }

@@ -2,36 +2,51 @@ import java.io.*;
 import java.util.*;
 
 public class Main {
-    // https://www.acmicpc.net/problem/2358
-    // 평행선
+    // https://www.acmicpc.net/problem/34404
+    // 파티 홍보
 
-    static int n;
+    static int N;
+
+    static class Center {
+        int x;
+        int y;
+
+        // Center의 값은 중앙값의 2배값임.
+        Center(int x, int y) {
+            this.x = x;
+            this.y = y;
+        }
+    }
     public static void main(String[] args) throws IOException {
         BufferedReader br = new BufferedReader( new InputStreamReader( System.in ) );
-        n = Integer.parseInt(br.readLine());
-        Map<Integer, Integer> xDict = new HashMap<>();
-        Map<Integer, Integer> yDict = new HashMap<>();
+
+        N = Integer.parseInt(br.readLine());
+        List<Center> centers = new ArrayList<>();
+
         StringTokenizer st;
-        while (n -- > 0) {
+        for (int i = 0 ; i < N; i ++) {
             st = new StringTokenizer(br.readLine());
             int x = Integer.parseInt(st.nextToken());
             int y = Integer.parseInt(st.nextToken());
+            int p = Integer.parseInt(st.nextToken());
+            int q = Integer.parseInt(st.nextToken());
+            // 정수 2 나누기 하면 안될거 같다.
+            // 직선의 방정식에 2배 해서 맞는지를 확인하는게...?
+            // 2 y = 2 a x + 2 b
+            centers.add(new Center(x+p, y+q));
+        }
 
-            Integer xCount = xDict.getOrDefault(x, 0);
-            xCount ++;
-            xDict.put(x, xCount);
-            Integer yCount = yDict.getOrDefault(y, 0);
-            yCount ++;
-            yDict.put(y, yCount);
+        st = new StringTokenizer(br.readLine());
+        long a = Integer.parseInt(st.nextToken());
+        long b = Integer.parseInt(st.nextToken());
+
+        int count = 0;
+
+        for (Center c : centers) {
+            if ((long) c.y >= a * c.x + 2 * b) count ++;
         }
-        int ans = 0;
-        for (Integer count : xDict.values()) {
-            if (count > 1) ans ++;
-        }
-        for (Integer count : yDict.values()) {
-            if (count > 1) ans ++;
-        }
-        System.out.println(ans);
+
+        System.out.println(count);
     }
 
 }

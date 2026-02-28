@@ -2,51 +2,43 @@ import java.io.*;
 import java.util.*;
 
 public class Main {
-    // https://www.acmicpc.net/problem/34404
-    // 파티 홍보
+    // https://www.acmicpc.net/problem/27940
+    // 가지 산사태
 
-    static int N;
+    public static void main(String[] args) throws Exception {
+        // 빠른 입력을 위한 BufferedReader 사용
+        BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
+        StringTokenizer st = new StringTokenizer(br.readLine());
 
-    static class Center {
-        int x;
-        int y;
+        int N = Integer.parseInt(st.nextToken()); // 농장의 층수
+        int M = Integer.parseInt(st.nextToken()); // 비가 오는 횟수
+        long K = Long.parseLong(st.nextToken());  // 버틸 수 있는 한계치
 
-        // Center의 값은 중앙값의 2배값임.
-        Center(int x, int y) {
-            this.x = x;
-            this.y = y;
-        }
-    }
-    public static void main(String[] args) throws IOException {
-        BufferedReader br = new BufferedReader( new InputStreamReader( System.in ) );
+        long totalRainAtLevel1 = 0;
+        boolean collapsed = false;
 
-        N = Integer.parseInt(br.readLine());
-        List<Center> centers = new ArrayList<>();
-
-        StringTokenizer st;
-        for (int i = 0 ; i < N; i ++) {
+        for (int i = 1; i <= M; i++) {
             st = new StringTokenizer(br.readLine());
-            int x = Integer.parseInt(st.nextToken());
-            int y = Integer.parseInt(st.nextToken());
-            int p = Integer.parseInt(st.nextToken());
-            int q = Integer.parseInt(st.nextToken());
-            // 정수 2 나누기 하면 안될거 같다.
-            // 직선의 방정식에 2배 해서 맞는지를 확인하는게...?
-            // 2 y = 2 a x + 2 b
-            centers.add(new Center(x+p, y+q));
+            int t = Integer.parseInt(st.nextToken()); // 1~t층까지 비가 옴
+            int r = Integer.parseInt(st.nextToken()); // 빗물의 양
+
+            // 어떤 층이 무너지려면, 가장 비를 많이 맞는 1층이 가장 먼저 무너집니다.
+            // (1층은 t가 무엇이든 항상 비를 맞기 때문)
+            totalRainAtLevel1 += r;
+
+            // 아직 결과를 출력하지 않았고, 1층의 누적량이 K를 초과했다면
+            if (!collapsed && totalRainAtLevel1 > K) {
+                System.out.println(i + " " + 1);
+                collapsed = true;
+                // 이후의 입력은 결과에 영향을 주지 않지만, 입력을 모두 읽어줘야 함에 유의하거나
+                // 바로 종료해도 무방합니다 (여기서는 안전하게 break 대신 flag 사용 후 종료 가능)
+                return;
+            }
         }
 
-        st = new StringTokenizer(br.readLine());
-        long a = Integer.parseInt(st.nextToken());
-        long b = Integer.parseInt(st.nextToken());
-
-        int count = 0;
-
-        for (Center c : centers) {
-            if ((long) c.y >= a * c.x + 2 * b) count ++;
+        // 모든 비가 내릴 때까지 무너지지 않은 경우
+        if (!collapsed) {
+            System.out.println("-1");
         }
-
-        System.out.println(count);
     }
-
 }

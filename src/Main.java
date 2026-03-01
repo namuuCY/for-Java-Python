@@ -2,43 +2,43 @@ import java.io.*;
 import java.util.*;
 
 public class Main {
-    // https://www.acmicpc.net/problem/27940
-    // 가지 산사태
+    // https://www.acmicpc.net/problem/6159
+
 
     public static void main(String[] args) throws Exception {
-        // 빠른 입력을 위한 BufferedReader 사용
         BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
         StringTokenizer st = new StringTokenizer(br.readLine());
 
-        int N = Integer.parseInt(st.nextToken()); // 농장의 층수
-        int M = Integer.parseInt(st.nextToken()); // 비가 오는 횟수
-        long K = Long.parseLong(st.nextToken());  // 버틸 수 있는 한계치
+        int N = Integer.parseInt(st.nextToken()); // 소의 수
+        int S = Integer.parseInt(st.nextToken()); // 의상 크기 제한
 
-        long totalRainAtLevel1 = 0;
-        boolean collapsed = false;
+        int[] lengths = new int[N];
+        for (int i = 0; i < N; i++) {
+            lengths[i] = Integer.parseInt(br.readLine());
+        }
 
-        for (int i = 1; i <= M; i++) {
-            st = new StringTokenizer(br.readLine());
-            int t = Integer.parseInt(st.nextToken()); // 1~t층까지 비가 옴
-            int r = Integer.parseInt(st.nextToken()); // 빗물의 양
+        // 1. 소들의 길이를 오름차순으로 정렬
+        Arrays.sort(lengths);
 
-            // 어떤 층이 무너지려면, 가장 비를 많이 맞는 1층이 가장 먼저 무너집니다.
-            // (1층은 t가 무엇이든 항상 비를 맞기 때문)
-            totalRainAtLevel1 += r;
+        int left = 0;
+        int right = N - 1;
+        long count = 0;
 
-            // 아직 결과를 출력하지 않았고, 1층의 누적량이 K를 초과했다면
-            if (!collapsed && totalRainAtLevel1 > K) {
-                System.out.println(i + " " + 1);
-                collapsed = true;
-                // 이후의 입력은 결과에 영향을 주지 않지만, 입력을 모두 읽어줘야 함에 유의하거나
-                // 바로 종료해도 무방합니다 (여기서는 안전하게 break 대신 flag 사용 후 종료 가능)
-                return;
+        // 2. 투 포인터를 이용한 탐색
+        while (left < right) {
+            int sum = lengths[left] + lengths[right];
+
+            if (sum <= S) {
+                // lengths[left]와 더했을 때 S 이하가 되는 소들은
+                // left+1 부터 right 까지 모두 가능함
+                count += (right - left);
+                left++; // 더 큰 값을 찾기 위해 왼쪽 포인터 이동
+            } else {
+                // 합이 S를 초과하면 오른쪽 포인터를 줄여서 합을 감소시킴
+                right--;
             }
         }
 
-        // 모든 비가 내릴 때까지 무너지지 않은 경우
-        if (!collapsed) {
-            System.out.println("-1");
-        }
+        System.out.println(count);
     }
 }

@@ -3,58 +3,29 @@ import java.math.BigInteger;
 import java.util.*;
 
 public class Main {
-    // https://www.acmicpc.net/problem/29723
+    // https://www.acmicpc.net/submit/24417
+
     public static void main(String[] args) throws IOException {
         BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
-        StringTokenizer st = new StringTokenizer(br.readLine());
+        int n = Integer.parseInt(br.readLine());
 
-        int n = Integer.parseInt(st.nextToken());
-        int m = Integer.parseInt(st.nextToken());
-        int k = Integer.parseInt(st.nextToken());
+        int mod = 1_000_000_007;
 
-        // 과목과 점수를 저장할 Map
-        HashMap<String, Integer> subjects = new HashMap<>();
-        for (int i = 0; i < n; i++) {
-            st = new StringTokenizer(br.readLine());
-            String subjectName = st.nextToken();
-            int score = Integer.parseInt(st.nextToken());
-            subjects.put(subjectName, score);
+        // 코드 2 실행 횟수: n - 2
+        // n의 최댓값이 2억이므로 10억 7보다 작아 별도의 모듈러 연산이 필요 없습니다.
+        int code2Count = n - 2;
+
+        // 코드 1 실행 횟수: n번째 피보나치 수 구하기 (O(N) 알고리즘, O(1) 공간 복잡도)
+        int prev2 = 1; // f[1]
+        int prev1 = 1; // f[2]
+        int current = 1;
+
+        for (int i = 3; i <= n; i++) {
+            current = (prev1 + prev2) % mod;
+            prev2 = prev1;
+            prev1 = current;
         }
 
-        int baseScore = 0;
-        // 공개된 필수 과목 K개 처리
-        for (int i = 0; i < k; i++) {
-            String mandatorySubject = br.readLine().trim();
-            baseScore += subjects.get(mandatorySubject);
-            subjects.remove(mandatorySubject); // 이미 반영된 과목은 후보에서 제외
-        }
-
-        // 남은 과목들의 점수만 리스트로 추출
-        ArrayList<Integer> remainingScores = new ArrayList<>();
-        for (int score : subjects.values()) {
-            remainingScores.add(score);
-        }
-
-        // 점수를 오름차순으로 정렬
-        Collections.sort(remainingScores);
-
-        int minScore = baseScore;
-        int maxScore = baseScore;
-
-        int needed = m - k; // 추가로 더 골라야 하는 과목 수
-
-        // 최소 점수: 가장 낮은 점수들을 더함
-        for (int i = 0; i < needed; i++) {
-            minScore += remainingScores.get(i);
-        }
-
-        // 최대 점수: 가장 높은 점수들을 더함
-        int size = remainingScores.size();
-        for (int i = size - 1; i >= size - needed; i--) {
-            maxScore += remainingScores.get(i);
-        }
-
-        // 결과 출력
-        System.out.println(minScore + " " + maxScore);
+        System.out.println(current + " " + code2Count);
     }
 }

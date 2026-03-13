@@ -3,85 +3,64 @@ import java.util.*;
 
 public class Main {
 
-    // https://www.acmicpc.net/problem/9079
+    // https://www.acmicpc.net/problem/31871
 
-    // 8가지 뒤집기 연산에 대한 비트마스크 미리 계산
-    // 0~8번 인덱스 구조:
-    // 0 1 2
-    // 3 4 5
-    // 6 7 8
-    static final int[] MASKS = {
-            7,      // 1행 (0, 1, 2) -> 1 + 2 + 4 = 7
-            56,     // 2행 (3, 4, 5) -> 8 + 16 + 32 = 56
-            448,    // 3행 (6, 7, 8) -> 64 + 128 + 256 = 448
-            73,     // 1열 (0, 3, 6) -> 1 + 8 + 64 = 73
-            146,    // 2열 (1, 4, 7) -> 2 + 16 + 128 = 146
-            292,    // 3열 (2, 5, 8) -> 4 + 32 + 256 = 292
-            273,    // 우하향 대각선 (0, 4, 8) -> 1 + 16 + 256 = 273
-            84      // 좌하향 대각선 (2, 4, 6) -> 4 + 16 + 64 = 84
-    };
+    static int N, M;
+    static long[][] graph;
+    static long maxAns = -1;
 
-    public static void main(String[] args) throws IOException {
+    public static void main(String[] args) throws Exception {
         BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
-        int T = Integer.parseInt(br.readLine().trim());
 
-        StringBuilder sb = new StringBuilder();
-        StringTokenizer st = new StringTokenizer("");
+        N = Integer.parseInt(br.readLine());
+        M = Integer.parseInt(br.readLine());
 
-        while (T-- > 0) {
-            int startState = 0;
+        // 정문(0) + 놀이기구(1~N) 이므로 크기를 N+1로 설정
+        graph = new long[N + 1][N + 1];
 
-            // 9개의 동전 상태 입력 받기 (줄바꿈 및 공백에 유연하게 대응)
-            for (int i = 0; i < 9; i++) {
-                while (!st.hasMoreTokens()) {
-                    st = new StringTokenizer(br.readLine());
-                }
-                String coin = st.nextToken();
-                if (coin.equals("H")) {
-                    startState |= (1 << i); // H일 경우 해당 자리의 비트를 1로 켬
-                }
+        // 그래프 초기화 (-1은 연결되지 않음을 의미)
+        for (int i = 0; i <= N; i++) {
+            for (int j = 0; j <= N; j++) {
+                graph[i][j] = -1;
             }
-
-            sb.append(bfs(startState)).append("\n");
         }
 
-        System.out.print(sb);
+        // 간선 정보 입력
+        for (int i = 0; i < M; i++) {
+            StringTokenizer st = new StringTokenizer(br.readLine());
+            int u = Integer.parseInt(st.nextToken());
+            int v = Integer.parseInt(st.nextToken());
+            long d = Long.parseLong(st.nextToken());
+
+            // 동일한 경로의 간선이 여러 개 들어올 수 있으므로 최대값만 갱신
+            graph[u][v] = Math.max(graph[u][v], d);
+        }
+
+        // DFS 탐색 시작 (현재 위치 0, 방문한 놀이기구 수 0, 방문 상태 0, 누적 거리 0)
+        dfs(0, 0, 0, 0L);
+
+        // 결과 출력
+        System.out.println(maxAns);
     }
 
-    static int bfs(int start) {
-        // 이미 모든 면이 같은 경우 (모두 T=0 이거나 모두 H=511)
-        if (start == 0 || start == 511) {
-            return 0;
+
+    static void dfs(int curr, int count, int visited, long dist) {
+        // 모든 놀이기구를 한 번씩 다 방문한 경우
+        if (count == N) {
+            // 정문(0)으로 돌아가는 길이 존재한다면 최장 시간 갱신
+            if (graph[curr][0] != -1) {
+                maxAns = Math.max(maxAns, dist + graph[curr][0]);
+            }
+            return;
         }
 
-        Queue<Integer> queue = new LinkedList<>();
-        int[] dist = new int[512];
-        Arrays.fill(dist, -1); // 방문 배열 초기화 (-1은 미방문)
-
-        queue.offer(start);
-        dist[start] = 0;
-
-        while (!queue.isEmpty()) {
-            int curr = queue.poll();
-
-            // 8가지 뒤집기 연산 수행
-            for (int mask : MASKS) {
-                int next = curr ^ mask; // XOR 연산으로 뒤집기
-
-                // 정답에 도달한 경우
-                if (next == 0 || next == 511) {
-                    return dist[curr] + 1;
-                }
-
-                // 아직 방문하지 않은 상태라면 큐에 추가
-                if (dist[next] == -1) {
-                    dist[next] = dist[curr] + 1;
-                    queue.offer(next);
-                }
+        // 1번부터 N번 놀이기구까지 탐색 (0번은 마지막에만 가야 하므로 1부터 시작)
+        for (int nxt = 1; nxt <= N; nxt++) {
+            // 다음 놀이기구를 아직 방문하지 않았고, 가는 길이 존재하는 경우
+            if ((visited & (1 << nxt)) == 0 && graph[curr][nxt] != -1) {
+                // 방문 표시 후 재귀 호출
+                dfs(nxt, count + 1, visited | (1 << nxt), dist + graph[curr][nxt]);
             }
         }
-
-        // 큐가 빌 때까지 목표에 도달하지 못했다면 불가능한 경우
-        return -1;
     }
 }
